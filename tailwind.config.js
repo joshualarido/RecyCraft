@@ -1,4 +1,3 @@
-// tailwind.config.js
 export default {
   content: [
     "./index.html",
@@ -7,5 +6,4 @@ export default {
   theme: {
     extend: {},
   },
-  plugins: [],
 }
