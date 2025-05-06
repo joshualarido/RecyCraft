@@ -2,11 +2,19 @@ import { FaRecycle } from "react-icons/fa";
 import { FaCamera } from "react-icons/fa";
 import { MdDashboard } from "react-icons/md";
 import { FaHammer } from "react-icons/fa";
-import { useState } from "react";
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from "react";
+import { Link, useLocation } from 'react-router-dom'
 
 const Sidebar = () => {
-    const [active, setActive] = useState("Camera");
+    const [active, setActive] = useState("");
+    const location = useLocation();
+    const path = location.pathname.toLowerCase();
+
+    useEffect(() => {
+        if (path === '/') setActive('camera');
+        else if (path === '/collection') setActive('collection');
+        else if (path === '/crafts') setActive('crafts');
+    }, [location.pathname]);
 
     return (
         <>
@@ -16,21 +24,21 @@ const Sidebar = () => {
                 <h1 className="text-3xl text-emerald-600">Recycraft</h1>
             </div>
             <div className="flex flex-col gap-3 w-full">
-                <NavButton name="Camera" icon={<FaCamera />} active={active} setActive={setActive}/>
-                <NavButton name="Collection" icon={<MdDashboard />} active={active} setActive={setActive}/>
-                <NavButton name="Crafts" icon={<FaHammer />} active={active} setActive={setActive}/>
+                <NavButton name="Camera" icon={<FaCamera />} path={path}/>
+                <NavButton name="Collection" icon={<MdDashboard />} path={path}/>
+                <NavButton name="Crafts" icon={<FaHammer />} path={path}/>
             </div>
         </div>
         </>
     );
 }
 
-const NavButton = ({ name, icon, active, setActive }) => {
-    const isActive = active === name;
+const NavButton = ({ name, icon, path }) => {
+    const isActive = path === "/" + name.toLowerCase();
 
     return (
         <>
-        <Link to={name === "Camera" ? "/" : name.toLowerCase()}>
+        <Link to={`/${name.toLowerCase()}`}>
         <button className={`flex flex-row justify-start items-center gap-4 py-4 px-6 rounded-lg w-full cursor-pointer transition-colors 
                             ${isActive ? 'bg-emerald-100 text-emerald-600' : 'hover:bg-gray-100 text-gray-400'}`}
                 onClick={() => setActive(name)}>
