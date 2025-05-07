@@ -1,6 +1,5 @@
-import Box from "../components/Box";
-import { FaRegTrashCan } from "react-icons/fa6";
-import { FaBookmark } from "react-icons/fa";
+import ProgressBox from "../components/ProgressBox";
+import CraftBox from "../components/CraftBox";
 
 const Crafts = () => {
   return (
@@ -8,60 +7,47 @@ const Crafts = () => {
       <div className="p-4 space-y-6">
         <div>
           <p className="text-xl font-semibold mb-2">In Progress</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <Box
-              item="Bottle Planter"
+          <div className="grid grid-cols-4">
+            <ProgressBox
+              item="Bottle Planter 1"
               image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
               progress="47"
-              icon={FaRegTrashCan}
             />
-            <Box
-              item="Bottle Planter"
+            <ProgressBox
+              item="Bottle Planter 2"
               image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-              progress="47"
-              icon={FaRegTrashCan}
+              progress="98"
             />
-            <Box
-              item="Bottle Planter"
+            <ProgressBox
+              item="Bottle Planter 3"
               image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-              progress="47"
-              icon={FaRegTrashCan}
+              progress="12"
+            />
+            <ProgressBox
+              item="Bottle Planter 4"
+              image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
+              progress="82"
             />
           </div>
         </div>
 
         <div>
           <p className="text-xl font-semibold mb-2">Other possible crafts</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <Box
-              item="Bottle Planter"
+          <div className="grid grid-cols-4 gap-4">
+            <CraftBox
+              item="Bottle Planter 5"
               image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-              progress="0"
-              icon={FaBookmark}
+              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."
             />
-            <Box
-              item="Bottle Planter"
+            <CraftBox
+              item="Bottle Planter 6"
               image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-              progress="0"
-              icon={FaBookmark}
+              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."
             />
-            <Box
-              item="Bottle Planter"
+            <CraftBox
+              item="Bottle Planter 7"
               image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-              progress="0"
-              icon={FaBookmark}
-            />
-            <Box
-              item="Bottle Planter"
-              image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-              progress="0"
-              icon={FaBookmark}
-            />
-            <Box
-              item="Bottle Planter"
-              image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-              progress="0"
-              icon={FaBookmark}
+              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."
             />
           </div>
         </div>
