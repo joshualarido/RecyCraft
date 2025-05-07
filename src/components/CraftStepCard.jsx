@@ -1,10 +1,16 @@
-const CraftStepCard = ({StepNumber, StepTitle, StepDescription}) => {
-  return (
-      <>
-        <div className="w-full min-h-36 rounded-xl bg-white shadow-xl flex flex-col px-6 py-4">
-            <div className="font-bold flex items-center gap-2">
+
+
+const CraftStepCard = ({StepNumber, StepTitle, StepDescription, isClicked, onClick}) => {
+    
+  return(
+        <>
+        <div onClick={onClick} 
+             className={`w-full min-h-36 rounded-xl shadow-xl flex flex-col px-6 py-4 transition-colors duration-300
+                         ${isClicked ? 'bg-green-200' : 'bg-white'}`}>
+          
+
+            <div className="font-bold flex items-center">
                 Step {StepNumber}:  {StepTitle}
-                <input type="checkbox" className="checkbox checkbox-success" />
             </div>
             <div>
               <p className="whitespace-pre-line">
