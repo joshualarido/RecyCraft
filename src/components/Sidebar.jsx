@@ -21,7 +21,7 @@ const Sidebar = () => {
 
     return (
         <>
-        <div className="bg-white w-96 h-screen px-6 py-8 flex flex-col gap-8 shadow-xl z-10">
+        <div className="bg-white w-72 h-screen px-6 py-8 flex flex-col gap-8 shadow-xl z-10 sticky top-0">
             <div className="flex justify-start items-center gap-4 px-6">
                 <h1><FaRecycle className="text-emerald-600 text-3xl" /></h1>
                 <h1 className="text-3xl text-emerald-600">Recycraft</h1>

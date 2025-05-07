@@ -9,9 +9,9 @@ import NotFound from './pages/NotFound'
 function App() {
   return (
     <>
-    <div className='w-screen h-screen flex flex-row'>
+    <div className='w-screen h-screen flex flex-row overflow-hidden'>
       <Sidebar/>
-      <div className="w-full bg-gray-100 px-6 py-8 z-0">
+      <div className="flex-1 bg-gray-100 px-6 py-8 z-0 overflow-y-auto">
         <Routes>
           <Route path="/" element={<Navigate to="/camera" replace />} />
 
