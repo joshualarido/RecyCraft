@@ -3,7 +3,7 @@ import { FaRegTrashCan } from "react-icons/fa6";
 
 const ProgressBox = (props) => {
   return (
-    <div className="card w-78 bg-base-100 shadow-xl p-4">
+    <div className="card w-full bg-base-100 shadow-lg p-4">
       <div className="rounded-lg overflow-hidden mb-2">
         <img
           src={props.image}

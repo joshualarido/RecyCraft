@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar'
 import Camera from './pages/Camera'
 import Collection from './pages/Collection'
 import Crafts from './pages/Crafts'
+import CraftDetails from './pages/CraftDetails'
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
           <Route path="/camera" element={<Camera />} />
           <Route path="/collection" element={<Collection />} />
           <Route path="/crafts" element={<Crafts />} />
+          <Route path="/craftdetails" element={<CraftDetails />} />
           <Route path="/404" element={<NotFound />} />
           
           <Route path="*" element={<Navigate to="/404" replace />} />
