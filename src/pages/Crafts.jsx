@@ -4,10 +4,10 @@ import CraftBox from "../components/CraftBox";
 const Crafts = () => {
   return (
     <>
-      <div className="p-4 space-y-6">
-        <div>
-          <p className="text-xl font-semibold mb-2">In Progress</p>
-          <div className="grid grid-cols-4">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4">
+        <h1 className="text-2xl font-semibold">In Progress</h1>
+          <div className="grid grid-cols-4 gap-4">
             <ProgressBox
               item="Bottle Planter 1"
               image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
@@ -31,8 +31,8 @@ const Crafts = () => {
           </div>
         </div>
 
-        <div>
-          <p className="text-xl font-semibold mb-2">Other possible crafts</p>
+        <div className="flex flex-col gap-4">
+          <h1 className="text-2xl font-semibold">Other Possible Crafts</h1>
           <div className="grid grid-cols-4 gap-4">
             <CraftBox
               item="Bottle Planter 5"

@@ -1,6 +1,6 @@
 import BigProgressBar from "../components/BigProgressBar"
 import CraftCard from "../components/CraftCard"
-import chido from "../assets/chido.PNG"
+import chido from "../assets/react.svg"
 import CraftImageCard from "../components/CraftImageCard"
 import CraftStepCard from "../components/CraftStepCard"
 import { useState } from 'react'
