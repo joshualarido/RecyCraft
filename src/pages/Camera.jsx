@@ -7,6 +7,8 @@ import { MdDashboard } from "react-icons/md";
 import { FaHammer } from "react-icons/fa";
 import { VscDebugRestart } from "react-icons/vsc";
 
+import { Link } from "react-router-dom";
+import Camera_Results from "./Camera_Results";
 
 const Camera = () => {
     const webcamRef = useRef(null);
@@ -75,11 +77,13 @@ const Camera = () => {
                             <h1 className="text-3xl"><MdDashboard /></h1>
                             <h4 className="text-md">Save to Collections</h4>
                         </div>
-                        <div className="flex flex-col justify-center items-center py-4 px-6 gap-2 text-gray-400 cursor-pointer
-                                        rounded-xl shadow-lg bg-emerald-100 hover:bg-emerald-200 transition duration-200">
-                            <h1 className="text-3xl text-emerald-500"><FaHammer /></h1>
-                            <h4 className="text-md text-emerald-500">Save to Collections</h4>
-                        </div>
+                        <Link to="/camera_results">                    
+                            <div className="flex flex-col justify-center items-center py-4 px-6 gap-2 text-gray-400 cursor-pointer
+                                            rounded-xl shadow-lg bg-emerald-100 hover:bg-emerald-200 transition duration-200">
+                                <h1 className="text-3xl text-emerald-500"><FaHammer /></h1>
+                                    <h4 className="text-md text-emerald-500">Save to Collections</h4>
+                            </div>
+                        </Link>
                     </div>
                 ) : (
                     <div className="flex flex-row w-fit bg-white shadow-lg py-4 px-6 rounded-xl justify-center items-center gap-6">

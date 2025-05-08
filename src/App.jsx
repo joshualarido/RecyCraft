@@ -5,7 +5,7 @@ import Camera from './pages/Camera'
 import Collection from './pages/Collection'
 import Crafts from './pages/Crafts'
 import NotFound from './pages/NotFound'
-
+import Camera_Results from './pages/Camera_Results'
 function App() {
   return (
     <>
@@ -16,6 +16,7 @@ function App() {
           <Route path="/" element={<Navigate to="/camera" replace />} />
 
           <Route path="/camera" element={<Camera />} />
+          <Route path="/camera_results" element={<Camera_Results />} />
           <Route path="/collection" element={<Collection />} />
           <Route path="/crafts" element={<Crafts />} />
           <Route path="/404" element={<NotFound />} />
