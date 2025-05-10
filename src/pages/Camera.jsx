@@ -72,7 +72,6 @@ const Camera = () => {
     const capture = useCallback(() => {
         const imageSrc = webcamRef.current.getScreenshot();
         saveImageToDB(imageSrc);
-        handleQuery();
 
         setImage(imageSrc);
         console.log(imageSrc)
@@ -98,7 +97,6 @@ const Camera = () => {
             const result = reader.result
             setImage(result)
             saveImageToDB(result);
-            handleQuery();
         }
 
         reader.readAsDataURL(file)
@@ -109,29 +107,6 @@ const Camera = () => {
     
     
     
-
-    // Handler to fetch data on button click
-    const handleQuery = () => {
-        const db = dbRef.current;
-        if (!db) {
-        console.error("Database is not ready yet");
-        return;
-        }
-    
-        const transaction = db.transaction("images", "readonly");
-        const store = transaction.objectStore("images");
-    
-        const getRequest = store.get(1); // Retrieve the image with id = 1
-    
-        getRequest.onsuccess = () => {
-        console.log("Queried image:", getRequest.result);
-        setImageData(getRequest.result); // Update state with the queried data
-        };
-    
-        getRequest.onerror = () => {
-        console.error("Query failed");
-        };
-    };
 
 
 
