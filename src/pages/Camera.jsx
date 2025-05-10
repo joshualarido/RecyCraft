@@ -83,7 +83,7 @@ const Camera = () => {
                     </div>
                 ) : (
                     <div className="flex flex-row w-fit bg-white shadow-lg py-4 px-6 rounded-xl justify-center items-center gap-6">
-                        <div className="flex flex-col justify-center items-center p-2 gap-2 text-gray-400 cursor-pointer"
+                        <div className="flex flex-col justify-center items-center gap-2 text-gray-400 cursor-pointer"
                             onClick={() => triggerFileSelect()}>
                             <input
                                 type="file"
