@@ -1,5 +1,6 @@
 import './App.css'
 import { Routes, Route, Navigate } from 'react-router-dom'
+import axios from 'axios'
 import Sidebar from './components/Sidebar'
 import Camera from './pages/Camera'
 import Collection from './pages/Collection'
@@ -8,6 +9,19 @@ import CraftDetails from './pages/CraftDetails'
 import NotFound from './pages/NotFound'
 
 function App() {
+  const callGemini = async (prompt) => {
+    try {
+      const res = await axios.post('/gemini', {
+        prompt: prompt
+      })
+      console.log("Gemini API response: ", res.data)
+    } catch (error) {
+      console.error("Error calling Gemini API:", error);
+    }
+  }
+
+  callGemini(`generate me an image of a recycled plastic water bottle as a soil planter`)
+
   return (
     <>
     <div className='w-screen h-screen flex flex-row overflow-hidden'>
