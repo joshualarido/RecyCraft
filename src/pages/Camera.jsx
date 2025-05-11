@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 const Camera = () => {
     const webcamRef = useRef(null);
     const fileInputRef = useRef(null)
+    const dbRef = useRef(null)
     const [image, setImage] = useState(null);
 
          // To store the IndexedDB references
@@ -89,8 +90,6 @@ const Camera = () => {
         console.log("works")
         const file = e.target.files[0]
         if(!file) return
-
-
         
         const reader = new FileReader()
         reader.onloadend = () => {
@@ -101,16 +100,6 @@ const Camera = () => {
 
         reader.readAsDataURL(file)
     }
-
-
-    
-    
-    
-    
-
-
-
-
 
     return (
         <>
