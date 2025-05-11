@@ -4,40 +4,37 @@ import { useState, useEffect } from "react"
 const Camera_Results = () => {
   const [imageSrc, setImageSrc] = useState(""); // State to hold the image URL
 
+  const loadImageFromDB = (callback) => {
+
+    const request = indexedDB.open("ImageDB", 1);
+  
+    request.onerror = (event) => {
+      console.error("Error opening IndexedDB", event);
+    };
+  
+    request.onsuccess = (event) => {
+      const db = event.target.result;
+      const transaction = db.transaction("images", "readonly");
+      const store = transaction.objectStore("images");
+      const getRequest = store.get(1);
+  
+      getRequest.onsuccess = () => {
+        const result = getRequest.result;
+        if (result && result.image instanceof Blob) {
+          const imageURL = URL.createObjectURL(result.image);
+          callback(imageURL);
+        } else {
+          console.warn("No image found in IndexedDB");
+        }
+      };
+    };
+  };
+  
   useEffect(() => {
     loadImageFromDB((url) => {
       setImageSrc(url); 
     });
   }, []);
-
-  
-
-  const loadImageFromDB = (callback) => {
-
-    const request = indexedDB.open("ImageDB", 1);
-  
-      request.onerror = (event) => {
-        console.error("Error opening IndexedDB", event);
-      };
-    
-      request.onsuccess = (event) => {
-        const db = event.target.result;
-        const transaction = db.transaction("images", "readonly");
-        const store = transaction.objectStore("images");
-        const getRequest = store.get(1);
-    
-        getRequest.onsuccess = () => {
-          const result = getRequest.result;
-          if (result && result.image instanceof Blob) {
-            const imageURL = URL.createObjectURL(result.image);
-            callback(imageURL);
-          } else {
-            console.warn("No image found in IndexedDB");
-          }
-        };
-      };
-    };
-  
   
     const scenario = Math.random() < 0.5 ? 0 : 1;
 
@@ -65,7 +62,7 @@ const Camera_Results = () => {
       <>
       <h1 className="text-2xl font-bold py-2">Item Description</h1>
 
-      <div className="flex items-center items-stretch gap-4 min-h-[150px]">
+      <div className="flex items-stretch gap-4 min-h-[150px]">
           <img src={imageSrc} alt="Picture recently taken" className="card h-150 bg-base-100 shadow-xl" />
           <div className={`text-2xl ${config.textColor} ${config.bgColor} rounded-lg p-4 shadow-md inline-block relative`}>
             <p className={`text-m font-medium ${config.labelColor} px-3 py-1 rounded-full w-fit`}>

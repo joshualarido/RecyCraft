@@ -29,11 +29,9 @@ async function runGemini(prompt) {
     ],
   });
 
-  // Optional: Log full response for debugging
   const parts = result?.response?.candidates?.[0]?.content?.parts || [];
   console.log("Gemini parts:", JSON.stringify(parts, null, 2));
 
-  // Try to find image data
   const imagePart = parts.find(
     (part) =>
       part.inlineData &&
@@ -49,12 +47,10 @@ async function runGemini(prompt) {
     };
   }
 
-  // Fall back to text response
   return {
     type: "text",
     data: result.response,
   };
 }
-
 
 module.exports = { runGemini }
