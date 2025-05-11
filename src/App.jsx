@@ -14,7 +14,7 @@ function App() {
       const res = await axios.post('/gemini', {
         prompt: prompt
       })
-      console.log("Gemini API response: ", res.data)
+      console.log("Gemini API response: ", res.data.reply.candidates[0])
     } catch (error) {
       console.error("Error calling Gemini API:", error);
     }
