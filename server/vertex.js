@@ -17,16 +17,24 @@ const model = vertexAI.getGenerativeModel({
 })
 
 async function runGemini(prompt) {
-    const result = await model.generateContent({
-        contents: [
-            {
-                role: 'user',
-                parts: [{ text: prompt }]
-            }
-        ]
-    })
+    try {
+        console.log("Sending prompt to Gemini API:", prompt); // Log the prompt being sent
+        
+        const result = await model.generateContent({
+            contents: [
+                {
+                    role: 'user',
+                    parts: [{ text: prompt }]
+                }
+            ]
+        });
 
-    return result.response
+        console.log("Received response from Gemini API:", result.response); // Log response data
+        return result.response;
+    } catch (error) {
+        console.error("Error during Gemini API request:", error); // Log complete error details
+        throw error;  // Ensure the error is thrown for handling in the calling function
+    }
 }
 
 module.exports = { runGemini }
