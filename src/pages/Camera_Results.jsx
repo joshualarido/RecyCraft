@@ -1,6 +1,5 @@
-import image from '../assets/photoedTrash.jpg'
 import CraftBox from '../components/CraftBox';
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 
 const Camera_Results = () => {
   const [imageSrc, setImageSrc] = useState(""); // State to hold the image URL

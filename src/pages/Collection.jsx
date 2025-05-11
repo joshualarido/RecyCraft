@@ -1,97 +1,110 @@
 import CollectionBox from "../components/CollectionBox";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const Collection = () => {
 
   const [box, setBox] = useState([
     {
-      item: null,
-      image: null,
-      description: null,
-      used: null,
-    }
+      name:"default",
+      image:"default",
+      description:"default",
+      used: false
+    },
+    {
+      name:"default",
+      image:"default",
+      description:"default",
+      used: true
+    },
   ]);
-  
-  const deleteItem = (itemId) => {
-    const request = indexedDB.open("collections", 1);
-    console.log("item ID is");
-    console.log({itemId});
-    request.onsuccess = (event) => {
-      
-      const db = event.target.result;
-      const transaction = db.transaction("collBox", "readwrite");
-      const store = transaction.objectStore("collBox");
 
-      const deleteRequest = store.delete(itemId);
-
-      deleteRequest.onsuccess = () => {
-        console.log("Item deleted successfully.");
-      };
-  
-      deleteRequest.onerror = () => {
-        console.error("Error deleting item:", deleteRequest.error);
-      };
-    };
-
-    request.onerror = function () {
-      console.error("Error opening/creating collections:", request.error);
-    };
-  };
+  const dbRefColl = useRef(null);
+  const dbRefImg = useRef(null);
 
   useEffect(() => {
-    const request = indexedDB.open('collections', 1);
+    const requestColl = indexedDB.open("collections", 1)
+    const requestImg = indexedDB.open("ImageDB", 1)
 
-    request.onupgradeneeded = function (event) {
+    requestColl.onupgradeneeded = (event) => {
+      console.log("Hey!");
       const db = event.target.result;
-      const objectStore = db.createObjectStore('collBox', {
-        keyPath: 'id',
-        autoIncrement: true
-      });
+      if (!db.objectStoreNames.contains("collBox")) {
+        const store = db.createObjectStore("collBox", { keyPath: "id", autoIncrement: true });
 
-      objectStore.createIndex('name', 'name', { unique: true });
-      objectStore.createIndex('image', 'image', { unique: true });
-      objectStore.createIndex('description', 'desc', { unique: false });
-      objectStore.createIndex('used', 'used', { unique: false });
-
-      console.log('collections with "collBox" store created.');
+        store.createIndex('name', 'name');
+        store.createIndex('img', 'img');
+        store.createIndex('desc', 'desc');
+        store.createIndex('used', 'used');
+      }
     };
 
-    request.onsuccess = function (event) {
+    requestColl.onerror = (event) => {
+      console.error("An error occurred with IndexedDB", event);
+    };
+    requestImg.onerror = (event) => {
+      console.error("An error occurred with IndexedDB", event);
+    };
+    
+    requestColl.onsuccess = (event) => {
       const db = event.target.result;
-      const transaction = db.transaction("collBox", "readwrite");
+      dbRefColl.current = db;
+    }
+    requestImg.onsuccess = (event) => {
+      const db = event.target.result;
+      dbRefImg.current = db;
+    }
 
-      const store = transaction.objectStore("collBox");
-      const cursor = store.openCursor();
+    if (dbRefColl.current && dbRefImg.current) {
+    transfer();
+  }
 
-      const newBox = [...box];
-
-      cursor.onsuccess = (event) => {
-        const cursored = event.target.result;
-
-        if (cursored) {
-          newBox.push({
-            item: cursored.value.name,
-            image: cursored.value.image,
-            description: cursored.value.desc,
-            used: cursored.value.used
-          });
-          cursored.continue();
-        } else {
-          // Update state with the newly fetched data
-          setBox(newBox);
-        }
-      };
-    };
-    request.onerror = function () {
-      console.error('Error opening/creating collections:', request.error);
-    };
   }, []);
 
+  const transfer = () => {
+    const dbColl = dbRefColl.current;
+    const dbImg = dbRefImg.current;
+
+    const transactionColl = dbColl.transaction("collBox", "readwrite");
+    const storeColl = transactionColl.objectStore("collBox");
+    const transactionImg = dbImg.transaction("images", "readonly");
+    const storeImg = transactionImg.objectStore("images");
+
+    const requestImg = storeImg.getAll();
+
+    requestImg.onerror = (event)=>{
+      console.error("reading from image idb failed", event);
+    }
+    requestImg.onsuccess=(event)=>{
+      const imgObject = event.target.result;
+
+      if (!imgObject) {
+        console.error(`Image with ID ${imageId} not found.`);
+        return;
+      }
+
+      const newObject = {
+        name: "default",
+        img: imgObject,
+        desc: "default",
+        used: false
+      }
+
+      const addRequest = storeColl.add(newObject);
+      addRequest.onsuccess=()=>{
+        console.log("Image successfully added to collections.");
+      }
+      addRequest.onerror = (err) => {
+        console.error("Error adding image to collections:", err);
+      };
+    }
+  }
+
+  
 
 
-  indexedDB.close;
 
-  const sortedItems = box.sort((a, b) => a.used - b.used);
+  
+  const sortedItems = [...box].sort((a, b) => a.used - b.used);
 
   console.log(box);
 
@@ -108,7 +121,7 @@ const Collection = () => {
             image={item.image}
             description={item.description}
             used={item.used}
-            onDelete={deleteItem} 
+            // onDelete={deleteItem} 
           />
         ))}
       </div>

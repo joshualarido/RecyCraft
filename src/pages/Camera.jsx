@@ -13,8 +13,7 @@ const Camera = () => {
     const fileInputRef = useRef(null)
     const [image, setImage] = useState(null);
 
-    const dbRef = useRef(null); // To store the IndexedDB reference
-    const [imageData, setImageData] = useState(null); // To store queried data
+         // To store the IndexedDB references
     
     // Initialize the IndexedDB
     useEffect(() => {
@@ -60,6 +59,7 @@ const Camera = () => {
         }
 
         const imageBlob = new Blob([bytes], { type: mime });
+        console.log(imageBlob)
 
         // Store the Blob in IndexedDB
         const transaction = db.transaction("images", "readwrite");
