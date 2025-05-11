@@ -56,7 +56,7 @@ const Collection = () => {
       dbRefImg.current = db;
       imgInitialized = true;
       if(collInitialized && imgInitialized && !alrdyTransfered.current){
-        transfer();
+        // transfer();
         display();
         alrdyTransfered.current = true;
       }

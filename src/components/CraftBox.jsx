@@ -3,7 +3,7 @@ import { FaBookmark } from "react-icons/fa";
 
 const CraftBox = (props) => {
   return (
-    <div className="card w-78 bg-base-100 shadow-xl p-4">
+    <div className="card w-full bg-base-100 shadow-lg p-4">
       <div className="rounded-lg overflow-hidden mb-2">
         <img
           src={props.image}
