@@ -1,13 +1,41 @@
 import ProgressBox from "../components/ProgressBox";
 import CraftBox from "../components/CraftBox";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const Crafts = () => {
+  const [generatedImage, setGeneratedImage] = useState(null);
+
+  const callGemini = async (prompt) => {
+    try {
+      const res = await axios.post("/gemini", { prompt });
+
+      const reply = res.data.reply;
+
+      console.log("Gemini reply:", reply);
+
+      if (reply.type === "image") {
+        const imageUrl = `data:${reply.mimeType};base64,${reply.base64}`;
+        setGeneratedImage(imageUrl); // Save to state
+      } else {
+        console.log("Text response: ", reply.data);
+      }
+    } catch (error) {
+      console.error("Error calling Gemini API:", error);
+    }
+  };
+
+  useEffect(() => {
+    callGemini(
+      "Create a photorealistic image of a recycled plastic water bottle that has been cut and reused as a soil planter. Include soil and a small green plant. Make it look like a DIY craft.Respond only with an image and text."
+    );
+  }, []);
   return (
     <>
-      <div className="p-4 space-y-6">
-        <div>
-          <p className="text-xl font-semibold mb-2">In Progress</p>
-          <div className="grid grid-cols-4">
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4">
+          <h1 className="text-2xl font-semibold">In Progress</h1>
+          <div className="grid grid-cols-4 gap-4">
             <ProgressBox
               item="Bottle Planter 1"
               image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
@@ -31,14 +59,17 @@ const Crafts = () => {
           </div>
         </div>
 
-        <div>
-          <p className="text-xl font-semibold mb-2">Other possible crafts</p>
+        <div className="flex flex-col gap-4">
+          <h1 className="text-2xl font-semibold">Other Possible Crafts</h1>
           <div className="grid grid-cols-4 gap-4">
-            <CraftBox
-              item="Bottle Planter 5"
-              image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."
-            />
+            {generatedImage && (
+              <CraftBox
+                item="AI-Generated Bottle Planter"
+                image={generatedImage}
+                description="This image was generated using Google Gemini AI."
+              />
+            )}
+
             <CraftBox
               item="Bottle Planter 6"
               image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
