@@ -1,6 +1,10 @@
 import { FaRegTrashCan } from "react-icons/fa6";
 
 const CollectionBox = (props) => {
+  const handleDelete = () => {
+    props.onDelete(props.id); 
+  };
+
   return (
     <div className="card w-full bg-base-100 shadow-lg p-4">
       <div className="rounded-lg overflow-hidden mb-2">
@@ -14,7 +18,7 @@ const CollectionBox = (props) => {
       <div className="card-body p-1">
         <div className="flex justify-between items-start mb-1">
           <h2 className="card-title text-lg">{props.item}</h2>
-          <button className="hover:text-red-600">
+          <button onClick={handleDelete} className="hover:text-red-600">
             <FaRegTrashCan className="text-lg transition-colors cursor-pointer" />
           </button>
         </div>
