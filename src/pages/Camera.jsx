@@ -17,7 +17,6 @@ const Camera = () => {
     const capture = useCallback(async () => {
         const imageSrc = webcamRef.current.getScreenshot();
         setImage(imageSrc);
-        console.log(imageSrc)
 
         const blob = base64ToBlob(imageSrc);
         console.log(blob)

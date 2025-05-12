@@ -1,10 +1,49 @@
 import CraftBox from '../components/CraftBox';
 import { useState, useEffect } from "react"
+import { initDB } from '../../db/indexedDB';
 import axios from "axios"
-import fs from "fs"
 
 const Camera_Results = () => {
-  const [imageSrc, setImageSrc] = useState("");
+  const [imageSrc, setImageSrc] = useState(null);
+  const [imageBase64, setImageBase64] = useState(null);
+  const [itemDetails, setItemDetails] = useState(null);
+
+  useEffect(() => {
+    loadImage();
+  }, []);
+
+  useEffect(() => {
+    if (imageBase64) {
+      const itemDetails = detectObject(imageBase64); // only run when base64 is ready
+      setItemDetails()
+    }
+  }), [imageBase64];
+
+  const loadImage = async () => {
+    const db = await initDB();
+    const tx = db.transaction("camera", "readonly");
+    const store = tx.objectStore("camera");
+
+    const request = store.get(1); // fixed ID
+
+    request.onsuccess = async (e) => {
+      const record = e.target.result;
+      if (record && record.image instanceof Blob) {
+        const base64 = await blobToBase64(record.image);
+        const objectURL = URL.createObjectURL(record.image);
+        
+        setImageBase64(base64);
+        setImageSrc(objectURL); // for <img>
+
+      } else {
+        console.warn("No image found in store");
+      }
+    };
+
+    request.onerror = (e) => {
+      console.error("Failed to load image:", e);
+    };
+  };
 
   // Converts blob file to base64
   const blobToBase64 = (blob) => {
@@ -16,60 +55,40 @@ const Camera_Results = () => {
     });
   };
 
-  // Load image from DB
-  const loadImageFromDB = (callback) => {
-    const request = indexedDB.open("ImageDB", 1);
-
-    request.onsuccess = (event) => {
-      const db = event.target.result;
-      const transaction = db.transaction("images", "readonly");
-      const store = transaction.objectStore("images");
-      const getRequest = store.get(1);
-
-      getRequest.onsuccess = async () => {
-        const result = getRequest.result;
-        if (result && result.image instanceof Blob) {
-          const base64 = await blobToBase64(result.image);
-          const url = URL.createObjectURL(result.image);
-          callback(url, base64);
-        }
-      };
-    };
-  };
-
   const detectObject = async (image) => {
     const prompt = `
-      Please detect what the object is in the image.
-      Format your reply in JSON format like so:
+      You are to analyze an image of an object and return a JSON response describing it.
+
+      Strictly follow this format below. Do not include any commentary or explanation, only the JSON block:
+
       {
-        name: "<item name>"
-        description: "<item description, 3 sentences, concise>"
-        size_estimate: "<provide best prediction as to size of object x * y * z, taking into account average sizes and relative sizes to objects around>"
-        recyclable: "true/false" (recyclability in this sense is defined by its ability to be used to make something new, whether by itself or combined with other objects.)
+        "name": "string",                // The name of the item detected
+        "description": "string",         // A concise 3-sentence description of the item
+        "size_estimate": "string",       // Estimate the size in the format L x W x H, e.g., "30cm x 20cm x 10cm"
+        "recyclable": true | false       // Use a boolean: true if it can be reused/recycled, false if not
       }
 
-      No other words besides the template given.
+      Only respond with the pure JSON object. Do NOT use triple backticks or any Markdown formatting. In the order defined.
     `
 
     try {
       const res = await axios.post("/gemini/text", { prompt, image });
+      const reply = res.data.reply.text;
 
-      const reply = res.data.reply;
-
-      console.log(reply);
+      // Attempt to parse the AI's response as JSON
+      let parsed;
+      try {
+        parsed = JSON.parse(reply);
+        console.log("Parsed Gemini output:", parsed);
+      } catch (jsonError) {
+        console.error("Failed to parse Gemini reply as JSON:", jsonError);
+        console.log("Raw reply from Gemini:", reply);
+      }
       
     } catch (error) {
       console.error("Error calling Gemini API:", error);
     }
   };
-  
-  
-  useEffect(() => {
-    loadImageFromDB(async (url, base64) => {
-      setImageSrc(url); 
-      // await detectObject(base64);
-    });
-  }, []);
 
   
   const scenario = Math.random() < 0.5 ? 0 : 1;
