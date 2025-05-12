@@ -13,31 +13,136 @@ const Camera = () => {
     const fileInputRef = useRef(null)
     const dbRef = useRef(null)
     const [image, setImage] = useState(null);
-
+    // const dbRef = useRef(null);
+    const dbRefColl = useRef(null);
+    const dbRefImg = useRef(null);
+    const alrdyTransfered = useRef(false);
+    const [triggerRender, setTriggerRender] = useState(false);
          // To store the IndexedDB references
     
     // Initialize the IndexedDB
     useEffect(() => {
-        const request = indexedDB.open("ImageDB", 1);
+        // const request = indexedDB.open("ImageDB", 1);
     
-        // Error handling
-        request.onerror = (event) => {
+        // // Error handling
+        // request.onerror = (event) => {
+        // console.error("An error occurred with IndexedDB", event);
+        // };
+    
+        // // On upgrade or initial setup
+        // request.onupgradeneeded = (event) => {
+        //     const db = event.target.result;
+        //     const store = db.createObjectStore("images", { keyPath: "id" });
+        //     store.createIndex("image", "image", { unique: true });
+        // };
+    
+        // // On successful open
+        // request.onsuccess = (event) => {
+        //     const db = event.target.result;
+        //     dbRef.current = db; // Store the DB reference in useRef
+        // }
+
+        const requestColl = indexedDB.open("collections", 1)
+        const requestImg = indexedDB.open("ImageDB", 1)
+
+        requestImg.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            const store = db.createObjectStore("images", { keyPath: "id" });
+            store.createIndex("image", "image", { unique: true });
+        };
+
+        requestColl.onupgradeneeded = (event) => {
+        console.log("Hey!");
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains("collBox")) {
+            const store = db.createObjectStore("collBox", { keyPath: "id", autoIncrement: true });
+
+            store.createIndex('name', 'name');
+            store.createIndex('image', 'image');
+            store.createIndex('description', 'description');
+            store.createIndex('used', 'used');
+        }
+        };
+
+        requestColl.onerror = (event) => {
         console.error("An error occurred with IndexedDB", event);
         };
-    
-        // On upgrade or initial setup
-        request.onupgradeneeded = (event) => {
-        const db = event.target.result;
-        const store = db.createObjectStore("images", { keyPath: "id" });
-        store.createIndex("image", "image", { unique: true });
+        requestImg.onerror = (event) => {
+        console.error("An error occurred with IndexedDB", event);
         };
-    
-        // On successful open
-        request.onsuccess = (event) => {
-            const db = event.target.result;
-            dbRef.current = db; // Store the DB reference in useRef
+
+        
+        requestColl.onsuccess = async (event) => {
+            const db = await event.target.result;
+            dbRefColl.current = db;
         }
+        requestImg.onsuccess = async (event) => {
+            const db = await event.target.result;
+            dbRefImg.current = db;
+        }
+
     }, []);
+
+    
+
+    const transfer = () => {
+        const dbColl = dbRefColl.current;
+        const dbImg = dbRefImg.current;
+
+        
+        const transactionImg = dbImg.transaction("images", "readonly");
+        const storeImg = transactionImg.objectStore("images");
+
+        const requestImg = storeImg.getAll();
+
+        requestImg.onerror = (event)=>{
+            console.error("reading from image idb failed", event);
+        }
+        requestImg.onsuccess=(event)=>{
+            const imgObject = event.target.result;
+
+            if (!imgObject) {
+                console.error(`Image with ID ${imageId} not found.`);
+                return;
+            }
+            // OVEERR HEEEEEEEEEEEEEEEEEEEEEEEEEEERRRRRRRRRRRRRRRRREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+            // If you want to add a new object in collections, take a photo, change this name to something else, THEN click save to collections or go to crafts
+            const newObject = {
+                name: "wowie",
+                image: imgObject[0],
+                description: "hey",
+                used: false
+            }
+
+            const transactionColl = dbColl.transaction("collBox", 'readonly');
+            const storeColl = transactionColl.objectStore("collBox");
+
+            const readRequest = storeColl.index("name").get(newObject.name);
+
+            readRequest.onerror = (err) => {
+                console.error("Error checking for existing object:", err);
+            };
+            
+            
+            readRequest.onsuccess=(event)=>{
+                const checker = event.target.result;
+                if(checker){
+                    console.log("Object with the same name already exists, skipping addition.");
+                }
+                else{
+                    const transactionColl = dbColl.transaction("collBox", "readwrite");
+                    const storeColl = transactionColl.objectStore("collBox");
+                    const addRequest = storeColl.add(newObject);
+                    addRequest.onsuccess=()=>{
+                        console.log("Image successfully added to collections.");
+                    }
+                    addRequest.onerror = (err) => {
+                        console.error("Error adding image to collections:", err);
+                    };
+                }
+            }      
+        }
+    }
     
     const saveImageToDB = (file) => {
         return new Promise((resolve, reject) => {
@@ -124,14 +229,14 @@ const Camera = () => {
                             <h4 className="text-md">Retake Image</h4>
                         </div>
                         <Link to="/collection">         
-                            <div className="flex flex-col justify-center items-center py-4 px-6 gap-2 text-gray-400 cursor-pointer bg-white
+                            <div onClick= {transfer} className="flex flex-col justify-center items-center py-4 px-6 gap-2 text-gray-400 cursor-pointer bg-white
                                             rounded-xl shadow-lg hover:bg-gray-100 transition duration-200">
                                 <h1 className="text-3xl"><MdDashboard /></h1>
                                 <h4 className="text-md">Save to Collections</h4>
                             </div>
                         </Link>
                         <Link to="/camera_results">                    
-                            <div className="flex flex-col justify-center items-center py-4 px-6 gap-2 text-gray-400 cursor-pointer
+                            <div onClick= {transfer} className="flex flex-col justify-center items-center py-4 px-6 gap-2 text-gray-400 cursor-pointer
                                             rounded-xl shadow-lg bg-emerald-100 hover:bg-emerald-200 transition duration-200">
                                 <h1 className="text-3xl text-emerald-500"><FaHammer /></h1>
                                     <h4 className="text-md text-emerald-500">See Possible Crafts</h4>
