@@ -14,10 +14,9 @@ const Camera_Results = () => {
 
   useEffect(() => {
     if (imageBase64) {
-      const itemDetails = detectObject(imageBase64); // only run when base64 is ready
-      setItemDetails()
+      detectObject(imageBase64); // only run when base64 is ready
     }
-  }), [imageBase64];
+  }, [imageBase64]);
 
   const loadImage = async () => {
     const db = await initDB();
@@ -57,7 +56,7 @@ const Camera_Results = () => {
 
   const detectObject = async (image) => {
     const prompt = `
-      You are to analyze an image of an object and return a JSON response describing it.
+      You are to analyze an image of an object and return a response describing it.
 
       Strictly follow this format below. Do not include any commentary or explanation, only the JSON block:
 
@@ -68,7 +67,7 @@ const Camera_Results = () => {
         "recyclable": true | false       // Use a boolean: true if it can be reused/recycled, false if not
       }
 
-      Only respond with the pure JSON object. Do NOT use triple backticks or any Markdown formatting. In the order defined.
+      Do NOT use triple backticks or any Markdown formatting.
     `
 
     try {
@@ -79,6 +78,7 @@ const Camera_Results = () => {
       let parsed;
       try {
         parsed = JSON.parse(reply);
+        setItemDetails(parsed);
         console.log("Parsed Gemini output:", parsed);
       } catch (jsonError) {
         console.error("Failed to parse Gemini reply as JSON:", jsonError);
@@ -115,60 +115,95 @@ const Camera_Results = () => {
 
   return (
       <>
-      <h1 className="text-2xl font-bold py-2">Item Description</h1>
+      <div className='flex flex-col gap-6'>
+        <div className="flex flex-col gap-4">
+          <h1 className="text-2xl font-bold">Item Description</h1>
 
-      <div className="flex items-stretch gap-4 min-h-[150px]">
-          <img src={imageSrc} alt="Picture recently taken" className="card h-150 bg-base-100 shadow-xl" />
-          <div className={`text-2xl ${config.textColor} ${config.bgColor} rounded-lg p-4 shadow-md inline-block relative`}>
-            <p className={`text-m font-medium ${config.labelColor} px-3 py-1 rounded-full w-fit`}>
-              {config.label}
-            </p>
-            <p className="py-3"><strong>Item</strong>: {config.item}</p>
-            <p className="py-3"><strong>Description</strong>: {config.description}</p>
-            <p className="py-3"><strong>Recyclability</strong>: {config.recyclability}</p>
+          <div className="flex flex-row items-stretch gap-4 w-full">
+            <img
+              src={imageSrc}
+              alt="Picture recently taken"
+              className="object-cover w-1/4 rounded-lg shadow-lg"
+            />
+            {itemDetails ? (
+              <>
+              <div
+                className={`flex flex-col text-lg ${
+                  itemDetails.recyclable ? 'text-gray-800 bg-white' : 'text-red-800 bg-red-100'
+                } rounded-lg p-4 shadow-md w-3/4 justify-center gap-4`}
+              >
+                <p
+                  className={`text-lg font-medium ${
+                    itemDetails.recyclable
+                      ? 'text-emerald-600 bg-emerald-100'
+                      : 'text-red-600 bg-red-200'
+                  } px-3 py-1 rounded-full w-fit`}
+                >
+                  {itemDetails.recyclable ? 'Recyclable' : 'Non-Recyclable'}
+                </p>
+                <div className="flex flex-col gap-4">
+                  <p>
+                    <strong>Item</strong>: {itemDetails.name}
+                  </p>
+                  <p>
+                    <strong>Description</strong>: {itemDetails.description}
+                  </p>
+                  <p>
+                    <strong>Size</strong>: {itemDetails.size_estimate}
+                  </p>
+                </div>
+              </div>
+              </>
+            ) : (
+              <h1>Loading...</h1>
+            )}
           </div>
-      </div>
+        </div>
 
+        <div className='flex flex-col gap-4'>
+          <h1 className="text-2xl font-bold">Simple Recycle Suggestions</h1>
+          <div className="flex justify-between gap-4">
+              <CraftBox 
+              item="Bottle Planter 5"
+              image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
+              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/>
+              <CraftBox 
+              item="Bottle Planter 5"
+              image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
+              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/>
+              <CraftBox 
+              item="Bottle Planter 5"
+              image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
+              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/>
+              <CraftBox 
+              item="Bottle Planter 5"
+              image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
+              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/>
+          </div>
+        </div>
 
-      <h1 className="text-2xl font-bold py-10">Simple Recycle Suggestions</h1>
-      <div className="flex justify-start gap-8">
-          <div><CraftBox 
-          item="Bottle Planter 5"
-          image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-          description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/></div>
-          <div><CraftBox 
-          item="Bottle Planter 5"
-          image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-          description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/></div>
-          <div><CraftBox 
-          item="Bottle Planter 5"
-          image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-          description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/></div>
-          <div><CraftBox 
-          item="Bottle Planter 5"
-          image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-          description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/></div>
+        <div className='flex flex-col gap-4'>
+          <h1 className="text-2xl font-bold">Multifaceted Recycle Suggestions</h1>
+          <div className="flex justify-between gap-4">
+            <CraftBox 
+              item="Bottle Planter 5"
+              image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
+              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/>
+            <CraftBox 
+              item="Bottle Planter 5"
+              image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
+              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/>
+            <CraftBox 
+              item="Bottle Planter 5"
+              image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
+              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/>
+            <CraftBox 
+              item="Bottle Planter 5"
+              image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
+              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/>
+          </div>
+        </div>
       </div>
-      <h1 className="text-2xl font-bold py-10">Multifaceted Recycle Suggestions</h1>
-      <div className="flex justify-start gap-8">
-      <div><CraftBox 
-          item="Bottle Planter 5"
-          image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-          description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/></div>
-          <div><CraftBox 
-          item="Bottle Planter 5"
-          image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-          description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/></div>
-          <div><CraftBox 
-          item="Bottle Planter 5"
-          image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-          description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/></div>
-          <div><CraftBox 
-          item="Bottle Planter 5"
-          image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-          description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/></div>
-      </div>
-      
       </>
   );
 }
