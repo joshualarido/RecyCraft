@@ -2,11 +2,13 @@ import CraftBox from '../components/CraftBox';
 import { useState, useEffect } from "react"
 import { initDB } from '../../db/indexedDB';
 import axios from "axios"
+import Crafts from './CraftDetails';
 
 const Camera_Results = () => {
   const [imageSrc, setImageSrc] = useState(null);
   const [imageBase64, setImageBase64] = useState(null);
   const [itemDetails, setItemDetails] = useState(null);
+  const [craftDetails, setCraftDetails] = useState(null);
 
   useEffect(() => {
     loadImage();
@@ -17,6 +19,12 @@ const Camera_Results = () => {
       detectObject(imageBase64); // only run when base64 is ready
     }
   }, [imageBase64]);
+
+  useEffect(() => {
+    if (itemDetails && imageBase64) {
+      createSuggestion(imageBase64);
+    }
+  }, [itemDetails, imageBase64]);
 
   const loadImage = async () => {
     const db = await initDB();
@@ -62,12 +70,13 @@ const Camera_Results = () => {
 
       {
         "name": "string",                // The name of the item detected
-        "description": "string",         // A concise 3-sentence description of the item
+        "description": "string",         // A concise 3-sentence description of the item, ignoring the environment of the item.
         "size_estimate": "string",       // Estimate the size in the format L x W x H, e.g., "30cm x 20cm x 10cm"
         "recyclable": true | false       // Use a boolean: true if it can be reused/recycled, false if not
       }
 
       Do NOT use triple backticks or any Markdown formatting.
+      It must be reiterated that the start of the output should NOT start with \`\`\`JSON or end with \`\`\` either.
     `
 
     try {
@@ -89,6 +98,64 @@ const Camera_Results = () => {
       console.error("Error calling Gemini API:", error);
     }
   };
+
+  const createSuggestion = async (image) => {
+
+    const prompt = `
+      You are to analyze an image of an object alongside the name, and description provided of the item and return a response of a possible recyclable item made out of it.
+
+      Strictly follow this format below. Do not include any commentary or explanation, only the JSON block:
+
+      {
+        "crafts": [
+       {
+        "name": "string",                // The name of the possible recyclable item crafted.
+        "description": "string",         // A concise 2-sentence description of the possible recyclable item, assume the reader is blind, doesn't see an image. so make a vivid description that is easily imaginable
+        "steps": [ 
+                         // Provide steps on how to turn the original provided item, into the wanted recyclable item, seperated to minimal of 4 steps, in the specified format. 
+          "string",          // A concise 1, or 2 sentence of guiding follow-along step.
+          "string", 
+          "string"  // if 3 steps aren't enough, continue with the current format. don't forget to put commas after the closing bracket, and leaving out the comma at in the last step
+        ]
+       },  // this is what counts as one craft
+       {
+        "name": "string",                // The name of the possible recyclable item crafted.
+        "description": "string",         // A concise 1-sentence description of the possible recyclable item.
+        "steps": [                 // Provide steps on how to turn the original provided item, into the wanted recyclable item, seperated to minimal of 4 steps in the specified format. 
+          "string",          // A concise 1, or 2 sentence of guiding follow-along step.
+          "string", 
+          "string"  // if 3 steps aren't enough, continue with the current format. don't forget to put commas after the closing bracket, and leaving out the comma at in the last step
+        ]
+       } // now create a total of 4 crafts, don't forget to remove the comma at the last craft.
+      ]
+    }    
+      
+
+      Do NOT use triple backticks or any Markdown formatting.
+      It must be reiterated that the start of the output should NOT start with \`\`\`JSON or end with \`\`\` either.
+    `
+    try {
+      const res = await axios.post("/gemini/text", { prompt, image });
+      const reply = res.data.reply.text;
+
+      // Attempt to parse the AI's response as JSON
+      let parsed;
+      try {
+        parsed = JSON.parse(reply);
+        setCraftDetails(parsed);
+        console.log("Parsed Gemini output:", parsed);
+        console.log(parsed.crafts);
+      } catch (jsonError) {
+        console.error("Failed to parse Gemini reply as JSON:", jsonError);
+        console.log("Raw reply from Gemini:", reply);
+      }
+      
+    } catch (error) {
+      console.error("Error calling Gemini API:", error);
+    }
+
+
+    };
 
   
   const scenario = Math.random() < 0.5 ? 0 : 1;
@@ -163,7 +230,7 @@ const Camera_Results = () => {
         <div className='flex flex-col gap-4'>
           <h1 className="text-2xl font-bold">Simple Recycle Suggestions</h1>
           <div className="flex justify-between gap-4">
-              <CraftBox 
+              {/* <CraftBox 
               item="Bottle Planter 5"
               image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
               description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/>
@@ -178,12 +245,25 @@ const Camera_Results = () => {
               <CraftBox 
               item="Bottle Planter 5"
               image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/>
+              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/> */}
+              {craftDetails ? (
+              craftDetails.crafts.map((craft, index) => (
+                <CraftBox
+                    key={index}
+                    item={craft.name}
+                    image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
+                    description={craft.description}
+                    />
+               ))
+                ) : (
+              <h1>Loading...</h1>
+            )}
           </div>
         </div>
 
         <div className='flex flex-col gap-4'>
           <h1 className="text-2xl font-bold">Multifaceted Recycle Suggestions</h1>
+          
           <div className="flex justify-between gap-4">
             <CraftBox 
               item="Bottle Planter 5"
