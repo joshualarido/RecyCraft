@@ -1,5 +1,7 @@
 import "./App.css";
 import { Routes, Route, Navigate } from "react-router-dom";
+import { initDB } from "../db/indexedDB";
+import { useEffect } from "react";
 import Sidebar from "./components/Sidebar";
 import Camera from "./pages/Camera";
 import Collection from "./pages/Collection";
@@ -9,8 +11,15 @@ import NotFound from "./pages/NotFound";
 import Camera_Results from "./pages/Camera_Results";
 
 function App() {
-  
 
+  useEffect(() => {
+    initDB().then((db) => {
+      console.log("Database initialized", db);
+    }).catch((err) => {
+      console.error("DB init error:", err);
+    });
+  }, []);
+  
   return (
     <>
       <div className="w-screen h-screen flex flex-row overflow-hidden">

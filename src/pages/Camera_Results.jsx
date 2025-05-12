@@ -67,7 +67,7 @@ const Camera_Results = () => {
   useEffect(() => {
     loadImageFromDB(async (url, base64) => {
       setImageSrc(url); 
-      await detectObject(base64);
+      // await detectObject(base64);
     });
   }, []);
 
