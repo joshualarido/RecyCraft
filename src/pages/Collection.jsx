@@ -15,7 +15,7 @@ const Collection = () => {
 
     requestImg.onupgradeneeded = (event) => {
         const db = event.target.result;
-        const store = db.createObjectStore("images", { keyPath: "id" });
+        const store = db.createObjectStore("images", { keyPath: "id", autoIncrement: true });
         store.createIndex("image", "image", { unique: true });
     };
 
@@ -88,7 +88,7 @@ const Collection = () => {
 
       const newObject = {
         name: "wow",
-        image: imgObject[0],
+        image: imgObject[0]?.image,
         description: "hey",
         used: false
       }
