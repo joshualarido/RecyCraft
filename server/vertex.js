@@ -29,27 +29,27 @@ const imgModel = vertexAI.getGenerativeModel({
 })
 
 async function textGemini(prompt, base64Image) {
-  const contents = [
-    {
-      role: 'user',
-      parts: [
-        { text: prompt },
-        base64Image && {
-          inlineData: {
-            mimeType: 'image/png',
-            data: base64Image,
-          },
+    const contents = [
+        {
+        role: 'user',
+        parts: [
+            { text: prompt },
+            base64Image && {
+            inlineData: {
+                mimeType: 'image/png',
+                data: base64Image,
+            },
+            },
+        ].filter(Boolean),
         },
-      ].filter(Boolean),
-    },
-  ];
+    ];
 
-  const result = await textModel.generateContent({ contents });
+    const result = await textModel.generateContent({ contents });
 
-  const parts = result.response.candidates[0].content.parts;
-  const text = parts.find(p => p.text)?.text || '';
+    const parts = result.response.candidates[0].content.parts;
+    const text = parts.find(p => p.text)?.text || '';
 
-  return { text };
+    return { text };
 }
 
 async function imgGemini(prompt) {
