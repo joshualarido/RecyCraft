@@ -1,22 +1,26 @@
 import { IoSearch } from "react-icons/io5";
 import { FaRegTrashCan } from "react-icons/fa6";
 
-const ProgressBox = (props) => {
+const ProgressBox = ({ id, item, image, progress, onDelete }) => {
   return (
     <div className="card w-full bg-base-100 shadow-lg p-4">
       <div className="rounded-lg overflow-hidden mb-2">
         <img
-          src={props.image}
-          alt={props.item}
+          src={image}
+          alt={item}
           className="h-40 w-full object-cover rounded-lg"
         />
       </div>
 
       <div className="card-body p-1">
         <div className="flex justify-between items-start mb-1">
-          <h2 className="card-title text-lg">{props.item}</h2>
-          <button className="hover:text-red-600">
-            <FaRegTrashCan className="text-lg transition-colors cursor-pointer"/>
+          <h2 className="card-title text-lg">{item}</h2>
+          <button
+            className="hover:text-red-600"
+            onClick={() => onDelete?.(id)}
+            title="Delete"
+          >
+            <FaRegTrashCan className="text-lg transition-colors cursor-pointer" />
           </button>
         </div>
 
@@ -29,11 +33,11 @@ const ProgressBox = (props) => {
           <p className="text-sm text-gray-500 whitespace-nowrap">Progress</p>
           <progress
             className="progress progress-success flex-grow"
-            value={props.progress}
+            value={progress}
             max="100"
           ></progress>
           <p className="text-sm text-gray-700 whitespace-nowrap">
-            {props.progress}%
+            {progress}%
           </p>
         </div>
       </div>
