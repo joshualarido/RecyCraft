@@ -68,9 +68,9 @@ async function imgGemini(prompt) {
 
     const parts = result.response.candidates[0].content.parts;
 
-    let base64Img = "";
-    let mimeType = "";
-    let text = "";
+    let base64Img = null;
+    let mimeType = null;
+    let text = null;
 
     for (const part of parts) {
         if (part.inlineData) {
