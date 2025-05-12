@@ -13,23 +13,20 @@ const Crafts = () => {
       const reply = res.data.reply;
 
       console.log("Gemini reply:", reply);
-
-      if (reply.type === "image") {
-        const imageUrl = `data:${reply.mimeType};base64,${reply.base64}`;
-        setGeneratedImage(imageUrl); // Save to state
-      } else {
-        console.log("Text response: ", reply.data);
-      }
+      const imageUrl = `data:${reply.mimeType};base64,${reply.image}`;
+      setGeneratedImage(imageUrl);
+      
     } catch (error) {
       console.error("Error calling Gemini API:", error);
     }
   };
 
   useEffect(() => {
-    callGemini(
-      "Create a photorealistic image of a recycled plastic water bottle that has been cut and reused as a soil planter. Include soil and a small green plant. Make it look like a DIY craft. Respond only with an image and text, provide a small desciption along with the response."
-    );
+    // callGemini(
+    //   "Create a photorealistic image of a recycled plastic water bottle that has been cut and reused as a soil planter. Include soil and a small green plant. Make it look like a DIY craft. Respond only with an image and text, provide a small desciption along with the response."
+    // );
   }, []);
+
   return (
     <>
       <div className="flex flex-col gap-4">
