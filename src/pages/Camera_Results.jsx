@@ -68,6 +68,7 @@ const Camera_Results = () => {
       }
 
       Do NOT use triple backticks or any Markdown formatting.
+      It must be reiterated that the start of the output should NOT start with \`\`\`JSON or end with \`\`\` either.
     `
 
     try {

@@ -99,25 +99,25 @@ const Camera = () => {
             </div>
             <div className="flex flex-row w-full justify-center items-center">
                 {image ? (
-                    <div className="flex flex-row gap-4">
+                    <div className="flex flex-wrap justify-center gap-4 w-full">
                         <div className="flex flex-col justify-center items-center py-4 px-6 gap-2 text-gray-400 cursor-pointer bg-white
-                                        rounded-xl shadow-lg hover:bg-gray-100 transition duration-200"
+                                        rounded-xl shadow-lg hover:bg-gray-100 transition duration-200 w-full max-sm:w-full sm:w-auto min-w-[140px]"
                             onClick={() => reset()}>
                             <h1 className="text-3xl"><VscDebugRestart /></h1>
-                            <h4 className="text-md">Retake Image</h4>
+                            <h4 className="text-md text-center w-full">Retake Image</h4>
                         </div>
-                        <Link to="/collection">         
+                        <Link to="/collection" className="w-full max-sm:w-full sm:w-auto min-w-[140px]">         
                             <div className="flex flex-col justify-center items-center py-4 px-6 gap-2 text-gray-400 cursor-pointer bg-white
-                                            rounded-xl shadow-lg hover:bg-gray-100 transition duration-200">
+                                            rounded-xl shadow-lg hover:bg-gray-100 transition duration-200 w-full max-sm:w-full sm:w-auto min-w-[140px]">
                                 <h1 className="text-3xl"><MdDashboard /></h1>
-                                <h4 className="text-md">Save to Collections</h4>
+                                <h4 className="text-md text-center w-full">Save to Collections</h4>
                             </div>
                         </Link>
-                        <Link to="/camera_results">                    
+                        <Link to="/camera_results" className="w-full max-sm:w-full sm:w-auto min-w-[140px]">                    
                             <div className="flex flex-col justify-center items-center py-4 px-6 gap-2 text-gray-400 cursor-pointer
-                                            rounded-xl shadow-lg bg-emerald-100 hover:bg-emerald-200 transition duration-200">
+                                            rounded-xl shadow-lg bg-emerald-100 hover:bg-emerald-200 transition duration-200 w-full max-sm:w-full sm:w-auto min-w-[140px]">
                                 <h1 className="text-3xl text-emerald-500"><FaHammer /></h1>
-                                    <h4 className="text-md text-emerald-500">See Possible Crafts</h4>
+                                <h4 className="text-md text-center w-full text-emerald-500">See Possible Crafts</h4>
                             </div>
                         </Link>
                     </div>
