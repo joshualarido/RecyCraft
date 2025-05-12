@@ -40,43 +40,37 @@ const Camera = () => {
     }, []);
     
     const saveImageToDB = (file) => {
-        const db = dbRef.current;
+        return new Promise((resolve, reject) => {
+            const db = dbRef.current;
+            if (!db) return reject("DB not ready");
 
-        if (!db) {
-            console.error("Database is not ready yet");
-            return;
-        }
+            const [header, base64] = file.split(',');
+            const mimeMatch = header.match(/:(.*?);/);
+            const mime = mimeMatch ? mimeMatch[1] : 'image/png';
 
-        // Extract base64 data and content type
-        const [header, base64] = file.split(',');
-        const mimeMatch = header.match(/:(.*?);/);
-        const mime = mimeMatch ? mimeMatch[1] : 'image/png';
-
-        // Convert base64 to binary
-        const binary = atob(base64);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) {
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
             bytes[i] = binary.charCodeAt(i);
-        }
+            }
 
-        const imageBlob = new Blob([bytes], { type: mime });
-        console.log(imageBlob)
+            const imageBlob = new Blob([bytes], { type: mime });
 
-        // Store the Blob in IndexedDB
-        const transaction = db.transaction("images", "readwrite");
-        const store = transaction.objectStore("images");
-        store.put({ id: 1, image: imageBlob });
+            const transaction = db.transaction("images", "readwrite");
+            const store = transaction.objectStore("images");
 
-        console.log("Image stored in IndexedDB");
-      };
+            const request = store.put({ id: 1, image: imageBlob });
 
-    const capture = useCallback(() => {
+            request.onsuccess = () => resolve();
+            request.onerror = (e) => reject(e);
+        });
+    };
+
+    const capture = useCallback(async () => {
         const imageSrc = webcamRef.current.getScreenshot();
-        saveImageToDB(imageSrc);
-
         setImage(imageSrc);
-        console.log(imageSrc)
-    }, [webcamRef])
+        await saveImageToDB(imageSrc); // wait to store image
+    }, [webcamRef]);
 
     const reset = () => {
         setImage(null);
@@ -86,20 +80,18 @@ const Camera = () => {
         fileInputRef.current.click()
     }
 
-    const handleFileChange = (e) => {
-        console.log("works")
-        const file = e.target.files[0]
-        if(!file) return
-        
-        const reader = new FileReader()
-        reader.onloadend = () => {
-            const result = reader.result
-            setImage(result)
-            saveImageToDB(result);
-        }
+    const handleFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
 
-        reader.readAsDataURL(file)
-    }
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+            const result = reader.result;
+            setImage(result);
+            await saveImageToDB(result); // ensures DB is updated before user goes to /camera_results
+        };
+        reader.readAsDataURL(file);
+    };
 
     return (
         <>
@@ -142,7 +134,7 @@ const Camera = () => {
                             <div className="flex flex-col justify-center items-center py-4 px-6 gap-2 text-gray-400 cursor-pointer
                                             rounded-xl shadow-lg bg-emerald-100 hover:bg-emerald-200 transition duration-200">
                                 <h1 className="text-3xl text-emerald-500"><FaHammer /></h1>
-                                    <h4 className="text-md text-emerald-500">Go to Crafts</h4>
+                                    <h4 className="text-md text-emerald-500">See Possible Crafts</h4>
                             </div>
                         </Link>
                     </div>
