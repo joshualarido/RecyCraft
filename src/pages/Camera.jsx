@@ -83,7 +83,8 @@ const Camera = () => {
     // scenario where save to collections is clicked, must generate details
     const detectObject = async (images) => {
         const prompt = `
-        You are to analyze an image of an object and return a response describing it.
+        Analyze the image and return the most likely object it depicts. Focus on clear and identifiable features of the object. 
+        If the object is in a container, do not confuse it with common bottles or jars. 
 
         Strictly follow this format below. Do not include any commentary or explanation, only the JSON block:
 
@@ -125,7 +126,6 @@ const Camera = () => {
         const transaction = db.transaction("collections", "readwrite")
         const store = transaction.objectStore("collections")
         if(!itemDetails){
-            db.close();
             return;
         }
         const request = await store.put({ name: itemDetails.name, image:image, description: itemDetails.description, used:false })
@@ -138,12 +138,7 @@ const Camera = () => {
         console.log("Details saved!");
     }, [itemDetails])
 
-    const LoadingScreen = () => (
-    <div className="loading-screen">
-        <h2>Loading...</h2>
-        {/* add spinner or animation */}
-    </div>
-    );
+  
 
     const handleClickSave=async()=>{
         console.log("clicky")
@@ -157,12 +152,15 @@ const Camera = () => {
             setLoading(false);
         }
     }
-    
+
 
     if (loading) {
         return (
         <div className="flex justify-center items-center h-screen">
             <h2 className="text-xl text-gray-600">Loading...</h2>
+            <div className="flex items-center justify-center px-10">
+                <div className="w-12 h-12 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+            </div>
         </div>
         );
     }
