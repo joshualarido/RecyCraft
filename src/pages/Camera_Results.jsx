@@ -14,9 +14,15 @@ const Camera_Results = () => {
     loadImage();
   }, []);
 
+  // Saves itemDetails to collection
+  useEffect(()=>{
+    saveDetails();
+  }, [itemDetails])
+
   useEffect(() => {
     if (imageBase64) {
       detectObject(imageBase64); // only run when base64 is ready
+      
     }
   }, [imageBase64]);
 
@@ -62,6 +68,16 @@ const Camera_Results = () => {
     });
   };
 
+  const saveDetails=async()=>{
+    const db = await initDB()
+    const transaction = db.transaction("collections", "readwrite")
+    const store = transaction.objectStore("collections")
+
+    const request = await store.put({ name: itemDetails.name, image:imageSrc, description: itemDetails.description, used:false })
+    request.onerror=(error)=>console.error("Failed to put descriptions in collection idb", error)
+    request.onsuccess=()=>console.log("Descriptions successfully in collections idb");
+  }
+
   const detectObject = async (image) => {
     const prompt = `
       You are to analyze an image of an object and return a response describing it.
@@ -88,6 +104,7 @@ const Camera_Results = () => {
       try {
         parsed = JSON.parse(reply);
         setItemDetails(parsed);
+        
         console.log("Parsed Gemini output:", parsed);
       } catch (jsonError) {
         console.error("Failed to parse Gemini reply as JSON:", jsonError);

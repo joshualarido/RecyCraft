@@ -1,208 +1,103 @@
 import CollectionBox from "../components/CollectionBox";
 import { useState, useEffect, useRef } from "react";
+import { initDB } from "../../db/indexedDB";
 
 const Collection = () => {
 
   const [box, setBox] = useState([]);
-  const dbRefColl = useRef(null);
-  const dbRefImg = useRef(null);
-  const alrdyTransfered = useRef(false);
-  const [triggerRender, setTriggerRender] = useState(false);
+  const [sortedItems, setSortedItems] = useState([])
 
-  useEffect(() => {
-    const requestColl = indexedDB.open("collections", 1)
-    const requestImg = indexedDB.open("ImageDB", 1)
+  // delete function
+  const deleteItem= async(boxName)=>{
+    const db = await initDB();
+    const tx = db.transaction("collections", "readwrite")
+    const store = tx.objectStore("collections")
 
-    requestImg.onupgradeneeded = (event) => {
-        const db = event.target.result;
-        const store = db.createObjectStore("images", { keyPath: "id", autoIncrement: true });
-        store.createIndex("image", "image", { unique: true });
-    };
+    const request = store.getAll();
+    request.onsuccess = () => {
+      const allObjs = request.result
 
-    requestColl.onupgradeneeded = (event) => {
-      console.log("Hey!");
-      const db = event.target.result;
-      if (!db.objectStoreNames.contains("collBox")) {
-        const store = db.createObjectStore("collBox", { keyPath: "id", autoIncrement: true });
-
-        store.createIndex('name', 'name');
-        store.createIndex('image', 'image');
-        store.createIndex('description', 'description');
-        store.createIndex('used', 'used');
-      }
-    };
-
-    requestColl.onerror = (event) => {
-      console.error("An error occurred with IndexedDB", event);
-    };
-    requestImg.onerror = (event) => {
-      console.error("An error occurred with IndexedDB", event);
-    };
-
-    let collInitialized = false;
-    let imgInitialized = false;
-    
-    requestColl.onsuccess = (event) => {
-      const db = event.target.result;
-      dbRefColl.current = db;
-      collInitialized = true;
-      if(collInitialized && imgInitialized && !alrdyTransfered){
-        transfer();
-        alrdyTransfered.current = true;
-      }
-    }
-    requestImg.onsuccess = (event) => {
-      const db = event.target.result;
-      dbRefImg.current = db;
-      imgInitialized = true;
-      if(collInitialized && imgInitialized && !alrdyTransfered.current){
-        // transfer();
-        display();
-        alrdyTransfered.current = true;
-      }
-    }
-
-
-  }, []);
-
-  const transfer = () => {
-    const dbColl = dbRefColl.current;
-    const dbImg = dbRefImg.current;
-
-    
-    const transactionImg = dbImg.transaction("images", "readonly");
-    const storeImg = transactionImg.objectStore("images");
-
-    const requestImg = storeImg.getAll();
-
-    requestImg.onerror = (event)=>{
-      console.error("reading from image idb failed", event);
-    }
-    requestImg.onsuccess=(event)=>{
-      const imgObject = event.target.result;
-
-      if (!imgObject) {
-        console.error(`Image with ID ${imageId} not found.`);
-        return;
-      }
-
-      const newObject = {
-        name: "wow",
-        image: imgObject[0]?.image,
-        description: "hey",
-        used: false
-      }
-
-      const transactionColl = dbColl.transaction("collBox", 'readonly');
-      const storeColl = transactionColl.objectStore("collBox");
-
-      const readRequest = storeColl.index("name").get(newObject.name);
-
-      readRequest.onerror = (err) => {
-        console.error("Error checking for existing object:", err);
-      };
-      
-      
-      readRequest.onsuccess=(event)=>{
-        const checker = event.target.result;
-        if(checker){
-          console.log("Object with the same name already exists, skipping addition.");
-        }
-        else{
-          const transactionColl = dbColl.transaction("collBox", "readwrite");
-          const storeColl = transactionColl.objectStore("collBox");
-          const addRequest = storeColl.add(newObject);
-          addRequest.onsuccess=()=>{
-            console.log("Image successfully added to collections.");
-          }
-          addRequest.onerror = (err) => {
-            console.error("Error adding image to collections:", err);
-          };
-        }
-      }      
-    }
-  }
-
-  const display=()=>{
-    const dbColl = dbRefColl.current;
-    const transactionColl = dbColl.transaction("collBox", "readwrite");
-    const storeColl = transactionColl.objectStore("collBox");
-
-    const readColl = storeColl.getAll();
-    readColl.onsuccess=(event)=>{
-      const allObjects = event.target.result; 
-      console.log("Fetched objects from DB:", allObjects); 
-      
-      const isUrl = (url) => {
-        return typeof url === 'string' && (url.startsWith('http') || url.startsWith('data:image'));
-      };
-
-      const updatedObjects = allObjects.map((obj) => {
-        if (obj.image && !isUrl(obj.image.image)) {
-          const imageUrl = URL.createObjectURL(obj.image.image);
-          return { ...obj, image: imageUrl }; // Replace Blob with URL
-        }
-        return obj; // In case image is already a valid URL or something else
-      });
-
-      const initialDefault = [
-        { name:"default", image:null, description:"default", used: false},
-        { name:"default", image:null, description:"default", used: true},
-      ];    
-
-      setBox(prevArray => [...initialDefault, ...updatedObjects]);
-    }
-    readColl.onerror=(event)=>{
-      console.error("display error", event);
-    }
-  }
-  
-
-  function deleteItem(nameKey){
-    const dbColl = dbRefColl.current;
-    const transactionColl = dbColl.transaction("collBox", "readwrite");
-    const storeColl = transactionColl.objectStore("collBox");
-
-    const scanning = storeColl.getAll();
-    scanning.onerror =(event)=>{
-      console.error("Error retrieving items:", event.target.error);
-    };
-    scanning.onsuccess =()=>{
-      const scanResult = scanning.result;
-      
-      const match = scanResult.find(item => item.name === nameKey)
+      const match = allObjs.find(obj => obj.name === boxName);
       if(match){
-        const nameDeleted = match.name;
-        const deleteRequest = storeColl.delete(match.id);
-
-        deleteRequest.onerror =(event)=>{
-          console.log("Error deleting", event);
+        store.delete(match.id)
+        console.log("delete success:", allObjs);
+        const awaiting = async() =>{
+          const renderedBox = await fetchBox()
+          setBox(renderedBox)
         }
-        deleteRequest.onsuccess =()=>{
-          console.log(`Deleted ${nameDeleted}`);
-          setTriggerRender(prev => !prev);
-        }
-      }
-      else{
-        console.warn(`No item found with imageblub "${nameKey}".`);
+        awaiting()
       }
     }
+  }
 
-    
+  // trigger a rerender after delete
+  const fetchBox = async()=>{
+    const db = await initDB()
+    const tx = db.transaction("collections", "readwrite")
+    const store = tx.objectStore("collections")
+
+    const request = store.getAll()
+    return await new Promise((resolve,reject)=>{
+      request.onsuccess=()=>resolve(request.result)
+      request.onerror=()=>reject(request.result)
+    })
   }
 
 
+  // adding test object
+  // const addObj = async() => {
+  //   const db = await initDB();
+  //   const tx = db.transaction("collections", "readwrite");
+  //   const store = tx.objectStore("collections");
+
+  //   const request = store.put({name:"hello", image:"blob:http://localhost:5173/bbe514ad-5e6a-4654-bb18-30bc86d4338d", description:"WOWIE", used:false})
+  //   return await new Promise((resolve,reject)=>{
+  //     request.onsuccess=()=>{
+  //       resolve(request.result)
+  //       console.log("Added nicely")
+  //   }
+  //     request.onerror=()=>reject(request.result)
+  //   })
+  // }
+
+
+  // loading to Object Array
+  const getBoxes = async() => {
+    const db = await initDB();
+    const tx = db.transaction("collections", "readonly")
+    const store = tx.objectStore("collections");
+    
+    const request = store.getAll();
+    return await new Promise((resolve,reject) => {
+      request.onsuccess=()=> resolve(request.result)
+      request.onerror=()=> reject(request.result)
+    })
+  }
+  useEffect(()=>{
+    const awaiting = async() => {
+      const allBox = await getBoxes();
+      setBox(allBox);
+    }
+    awaiting();
+  },[])
+  
+  useEffect(() => {
+    const sorted = [...box].sort((a, b) => a.used - b.used)
+    setSortedItems(sorted);
+  }, [box]);
+
+  console.log("box", box);
 
   
-  const sortedItems = [...box].sort((a, b) => a.used - b.used);
-  console.log(box);
+  if (sortedItems.length === 0) {
+    return <p>No items at this time</p>;
+  }
 
   return (
     <div className="p-4 space-y-6">
       <p className="text-xl font-semibold mb-2">All items</p>
       <div className="grid grid-cols-4 gap-4" >
         {sortedItems
-        .filter(item => item.description != null && item.description != undefined)
         .map((item, index) => (
           <CollectionBox
             key={index}
