@@ -23,8 +23,8 @@ export const initDB = () => {
 
       if (!db.objectStoreNames.contains("crafts")) {
         const store = db.createObjectStore("crafts", { keyPath: "id", autoIncrement: true });
-        store.createIndex("title", "title");
-        store.createIndex("materials", "materials");
+        store.createIndex("name", "name");
+        store.createIndex("description", "description");
         store.createIndex("steps", "steps");
       }
     };
