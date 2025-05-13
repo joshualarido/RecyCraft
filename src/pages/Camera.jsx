@@ -124,7 +124,10 @@ const Camera = () => {
         const db = await initDB()
         const transaction = db.transaction("collections", "readwrite")
         const store = transaction.objectStore("collections")
-
+        if(!itemDetails){
+            db.close();
+            return;
+        }
         const request = await store.put({ name: itemDetails.name, image:image, description: itemDetails.description, used:false })
         request.onerror=(error)=>console.error("Failed to put descriptions in collection idb", error)
         request.onsuccess=()=>console.log("Descriptions successfully in collections idb");
