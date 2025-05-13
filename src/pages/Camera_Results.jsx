@@ -170,32 +170,7 @@ const Camera_Results = () => {
     } catch (error) {
       console.error("Error calling Gemini API:", error);
     }
-
-
-    };
-
-  
-  const scenario = Math.random() < 0.5 ? 0 : 1;
-
-  const config = scenario === 0
-  ? {
-      label: 'Recyclable',
-      labelColor: 'text-emerald-600 bg-emerald-100',
-      item: 'Plastic Bag',
-      description: 'This is scenario 0: recyclable material.',
-      recyclability: 'It can be recycled at most centers.',
-      textColor: 'text-gray-800',
-      bgColor: 'bg-white'
-    }
-  : {
-      label: 'Non-Recyclable',
-      labelColor: 'text-red-600 bg-red-200',
-      item: 'Plastic Wrapper',
-      description: 'This is scenario 1: non-recyclable material.',
-      recyclability: 'This item is not suitable for recycling due to contamination or material makeup.',
-      textColor: 'text-red-800',
-      bgColor: 'bg-red-100'
-    };
+  };
 
   return (
       <>
@@ -203,18 +178,18 @@ const Camera_Results = () => {
         <div className="flex flex-col gap-4">
           <h1 className="text-2xl font-bold">Item Description</h1>
 
-          <div className="flex flex-row items-stretch gap-4 w-full">
+          <div className="flex flex-row items-stretch gap-4 w-full max-sm:flex-col">
             <img
               src={imageSrc}
               alt="Picture recently taken"
-              className="object-cover w-1/4 rounded-lg shadow-lg"
+              className="object-cover w-1/4 rounded-lg shadow-lg max-sm:w-full"
             />
             {itemDetails ? (
               <>
               <div
                 className={`flex flex-col text-lg ${
                   itemDetails.recyclable ? 'text-gray-800 bg-white' : 'text-red-800 bg-red-100'
-                } rounded-lg p-4 shadow-md w-3/4 justify-center gap-4`}
+                } rounded-lg p-4 shadow-md w-3/4 justify-center gap-4 max-sm:w-full`}
               >
                 <p
                   className={`text-lg font-medium ${
@@ -266,11 +241,15 @@ const Camera_Results = () => {
               {craftDetails ? (
               craftDetails.crafts.map((craft, index) => (
                 <CraftBox
-                    key={index}
-                    item={craft.name}
-                    image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-                    description={craft.description}
-                    />
+                  key={index}
+                  craft={craft}
+                  item={craft.name}
+                  image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
+                  description={craft.description} 
+                  steps={craft.steps}
+                  aiOutput={craftDetails}
+                  saved={false}
+                />
                ))
                 ) : (
               <h1>Loading...</h1>
