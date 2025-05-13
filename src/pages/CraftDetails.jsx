@@ -4,15 +4,13 @@ import chido from "../assets/react.svg"
 import CraftImageCard from "../components/CraftImageCard"
 import CraftStepCard from "../components/CraftStepCard"
 import { useState } from 'react'
-
+import { useLocation } from "react-router-dom";
 
 
 const Crafts = () => {
-    const steps = [
-        { title: "Mark the Cutting Line", description: "balalalalal\ne\ne" },
-        { title: "Cut the Bottle", description: "c525325ut\ne\n" },
-        { title: "Glue the Edges", description: "g244124ue\ne\n" }
-    ]
+    const location = useLocation();
+    const craft  = location.state?.craft;
+    const steps = craft?.steps;
 
     const [StepProgress, setStepProgress] = useState(0);
     const barProgress = Math.floor(StepProgress/steps.length*100);
@@ -22,7 +20,7 @@ const Crafts = () => {
             <h1 className="text-2xl font-bold">Craft Description</h1>
             <div className="flex gap-4">
                 <CraftImageCard CraftImage={chido}/>
-                <CraftCard CraftName={"hell2o"} CraftDescription={"oijfwe9jf842j8929j92033"} CraftUses={"osgjsdf989dsjsod"}/>
+                <CraftCard CraftName={craft.name} CraftDescription={craft.description} CraftUses={craft.description}/>
             </div>
             <div className="flex flex-col gap-4 w-full">
                 <h2 className="text-xl flex items-center font-semibold">Instructions ({StepProgress}/{steps.length})</h2>
@@ -32,8 +30,8 @@ const Crafts = () => {
                 <CraftStepCard
                     key={index}
                     StepNumber={index + 1}
-                    StepTitle={step.title}
-                    StepDescription={step.description}
+                    StepTitle=""
+                    StepDescription={step}
                     isClicked={index < StepProgress}
                     onClick={() => {
                         if (index === StepProgress) {

@@ -1,6 +1,7 @@
 import { FaHammer } from "react-icons/fa6";
 import { FaBookmark, FaRegBookmark  } from "react-icons/fa";
-
+import {Link} from "react-router-dom";
+import CraftDetails from "../pages/CraftDetails";
 const CraftBox = (props) => {
   return (
     <div className="card w-full bg-base-100 shadow-lg p-4">
@@ -22,11 +23,18 @@ const CraftBox = (props) => {
 
         <p className="text-sm text-gray-600 mb-4 max-sm:text-xs max-sm:mb-2">{props.description}</p>
 
-        <button className="btn btn-ghost btn-sm w-full flex items-center justify-center gap-2 border mt-1 bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition rounded-md
+        <Link to={"/craftdetails"} 
+                  state={{ craft: {
+                    name: props.item,
+                    description: props.description,
+                    steps: props.steps,
+                    image: props.image
+                  } }}
+        className="btn btn-ghost btn-sm w-full flex items-center justify-center gap-2 border mt-1 bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition rounded-md
                           max-sm:text-sm">
           <FaHammer className="text-lg" />
           Craft
-        </button>
+        </Link>
       </div>
     </div>
   );
