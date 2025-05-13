@@ -7,12 +7,16 @@ import { FaCamera } from "react-icons/fa";
 import { MdDashboard } from "react-icons/md";
 import { FaHammer } from "react-icons/fa";
 import { VscDebugRestart } from "react-icons/vsc";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios"
 
 const Camera = () => {
     const webcamRef = useRef(null);
     const fileInputRef = useRef(null)
     const [image, setImage] = useState(null);
+    const [itemDetails, setItemDetails] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     const capture = useCallback(async () => {
         const imageSrc = webcamRef.current.getScreenshot();
@@ -20,7 +24,7 @@ const Camera = () => {
 
         const blob = base64ToBlob(imageSrc);
         console.log(blob)
-        await saveImageToIndexedDB(blob);
+        await saveImageToCameraIdb(blob);
     }, [webcamRef]);
 
     const reset = () => {
@@ -42,7 +46,7 @@ const Camera = () => {
             setImage(result);
 
             const blob = base64ToBlob(result);
-            await saveImageToIndexedDB(blob);
+            await saveImageToCameraIdb(blob);
         };
 
         reader.readAsDataURL(file); // Read file
@@ -61,7 +65,7 @@ const Camera = () => {
         return new Blob([bytes], { type: mime });
     };
 
-    const saveImageToIndexedDB = async (blob) => {
+    const saveImageToCameraIdb = async (blob) => {
         const db = await initDB(); // access already defined DB
         const tx = db.transaction("camera", "readwrite"); // open transaction in table "images" for reading and writing
         const store = tx.objectStore("camera");
@@ -75,6 +79,90 @@ const Camera = () => {
             tx.onerror = (e) => reject(e);
         });
     };
+
+    // scenario where save to collections is clicked, must generate details
+    const detectObject = async (images) => {
+        const prompt = `
+        You are to analyze an image of an object and return a response describing it.
+
+        Strictly follow this format below. Do not include any commentary or explanation, only the JSON block:
+
+        {
+            "name": "string",                // The name of the item detected
+            "description": "string",         // A concise 3-sentence description of the item, ignoring the environment of the item.
+            "size_estimate": "string",       // Estimate the size in the format L x W x H, e.g., "30cm x 20cm x 10cm"
+            "recyclable": true | false       // Use a boolean: true if it can be reused/recycled, false if not
+        }
+
+        Do NOT use triple backticks or any Markdown formatting.
+        It must be reiterated that the start of the output should NOT start with \`\`\`JSON or end with \`\`\` either.
+        `
+
+        try {
+        const res = await axios.post("/gemini/text", { prompt, images });
+        console.log("Gemini raw data:", res.data);
+        const reply = res.data.reply.text;
+
+        // Attempt to parse the AI's response as JSON
+        let parsed;
+        try {
+            parsed = JSON.parse(reply);
+            setItemDetails(parsed);
+            
+            console.log("Parsed Gemini output:", parsed);
+        } catch (jsonError) {
+            console.error("Failed to parse Gemini reply as JSON:", jsonError);
+            console.log("Raw reply from Gemini:", reply);
+        }
+        
+        } catch (error) {
+        console.error("Error calling Gemini API:", error);
+        }
+    };
+
+    const saveDetails=async()=>{
+        const db = await initDB()
+        const transaction = db.transaction("collections", "readwrite")
+        const store = transaction.objectStore("collections")
+
+        const request = await store.put({ name: itemDetails.name, image:image, description: itemDetails.description, used:false })
+        request.onerror=(error)=>console.error("Failed to put descriptions in collection idb", error)
+        request.onsuccess=()=>console.log("Descriptions successfully in collections idb");
+    }
+    
+    useEffect(()=>{
+        saveDetails();
+        console.log("Details saved!");
+    }, [itemDetails])
+
+    const LoadingScreen = () => (
+    <div className="loading-screen">
+        <h2>Loading...</h2>
+        {/* add spinner or animation */}
+    </div>
+    );
+
+    const handleClickSave=async()=>{
+        console.log("clicky")
+        setLoading(true);
+        try {
+            await detectObject(image); // your async function
+            navigate("/collection");   // programmatic navigation instead of <Link>
+        } catch (error) {
+            console.error("Error:", error);
+        } finally {
+            setLoading(false);
+        }
+    }
+    
+
+    if (loading) {
+        return (
+        <div className="flex justify-center items-center h-screen">
+            <h2 className="text-xl text-gray-600">Loading...</h2>
+        </div>
+        );
+    }
 
     return (
         <>
@@ -106,13 +194,11 @@ const Camera = () => {
                             <h1 className="text-3xl"><VscDebugRestart /></h1>
                             <h4 className="text-md">Retake Image</h4>
                         </div>
-                        <Link to="/collection">         
-                            <div className="flex flex-col justify-center items-center py-4 px-6 gap-2 text-gray-400 cursor-pointer bg-white
-                                            rounded-xl shadow-lg hover:bg-gray-100 transition duration-200">
-                                <h1 className="text-3xl"><MdDashboard /></h1>
-                                <h4 className="text-md">Save to Collections</h4>
-                            </div>
-                        </Link>
+                        <div onClick={handleClickSave} className="flex flex-col justify-center items-center py-4 px-6 gap-2 text-gray-400 cursor-pointer bg-white
+                                        rounded-xl shadow-lg hover:bg-gray-100 transition duration-200">
+                            <h1 className="text-3xl"><MdDashboard /></h1>
+                            <h4 className="text-md">Save to Collections</h4>
+                        </div>
                         <Link to="/camera_results">                    
                             <div className="flex flex-col justify-center items-center py-4 px-6 gap-2 text-gray-400 cursor-pointer
                                             rounded-xl shadow-lg bg-emerald-100 hover:bg-emerald-200 transition duration-200">
