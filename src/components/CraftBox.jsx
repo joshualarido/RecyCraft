@@ -52,7 +52,7 @@ const CraftBox = (props) => {
     if (saved) {
       removeCraftFromIndexedDB(); // now we have correct ID
     } else {
-      saveCraftToIndexedDB(props.name, props.description, props.steps);
+      saveCraftToIndexedDB(props.item, props.description, props.steps);
     }
   };
 
@@ -61,14 +61,14 @@ const CraftBox = (props) => {
       <div className="rounded-lg overflow-hidden mb-2">
         <img
           src={props.image}
-          alt={props.name}
+          alt={props.item}
           className="h-40 w-full object-cover rounded-lg max-sm:h-32"
         />
       </div>
 
       <div className="card-body p-1">
         <div className="flex justify-between items-start mb-1 max-sm:flex-col max-sm:gap-2">
-          <h2 className="card-title text-lg">{props.name}</h2>
+          <h2 className="card-title text-lg">{props.item}</h2>
           <h1
             className="text-lg transition-colors cursor-pointer pt-2 hover:text-emerald-600"
             onClick={toggleSave}
