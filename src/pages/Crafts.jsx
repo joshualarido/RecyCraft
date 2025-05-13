@@ -33,6 +33,29 @@ const Crafts = () => {
     }
   };
 
+  const addSampleCraftToIndexedDB = async () => {
+    try {
+      const db = await initDB();
+      const tx = db.transaction("crafts", "readwrite");
+      const store = tx.objectStore("crafts");
+
+      await store.put({
+        title: "Sample Craft",
+        image: sampleImage,
+        materials: "Plastic bottle, soil, plant",
+        steps: "1. Cut bottle\n2. Add soil\n3. Plant seeds",
+        description: "A bottle reused as a planter",
+        progress: 20,
+      });
+
+      await tx.complete; // Wait for transaction to finish
+      console.log("Sample craft added successfully");
+    } catch (error) {
+      console.error("Failed to add craft:", error);
+    }
+  };
+
+  //To Gemini
   const callGemini = async (prompt) => {
     try {
       const res = await axios.post("/gemini", { prompt });
@@ -177,6 +200,52 @@ Return the suggestions strictly in this JSON format. Do not include any explanat
       }
     } catch (error) {
       console.error("Error calling Gemini API:", error);
+    }
+  };
+
+  const loadCraftsFromIndexedDB = async () => {
+    try {
+      const db = await initDB();
+      const tx = db.transaction("crafts", "readonly");
+      const store = tx.objectStore("crafts");
+
+      const craftsArray = [];
+
+      const request = store.openCursor();
+      request.onsuccess = (event) => {
+        const cursor = event.target.result;
+        if (cursor) {
+          craftsArray.push(cursor.value);
+          cursor.continue();
+        } else {
+          setCrafts(craftsArray);
+        }
+      };
+
+      request.onerror = (e) => {
+        console.error("Error loading crafts:", e);
+      };
+    } catch (err) {
+      console.error("IndexedDB error:", err);
+    }
+  };
+
+  const handleDeleteCraft = async (id) => {
+    try {
+      const db = await initDB();
+      const tx = db.transaction("crafts", "readwrite");
+      const store = tx.objectStore("crafts");
+
+      await store.delete(id);
+
+      tx.oncomplete = () => {
+        console.log(`Craft with id ${id} deleted`);
+        setCrafts((prev) => prev.filter((c) => c.id !== id)); // Update UI
+      };
+
+      tx.onerror = (e) => console.error("Delete error", e);
+    } catch (error) {
+      console.error("IndexedDB delete error:", error);
     }
   };
 
