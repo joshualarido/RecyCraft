@@ -225,11 +225,12 @@ const Camera_Results = () => {
               craftDetails.crafts.map((craft, index) => (
                 <CraftBox
                   key={index}
-                  aiOutput={craftDetails}
-                  name={craft.name}
-                  description={craft.description}
+                  craft={craft}
+                  item={craft.name}
                   image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
+                  description={craft.description} 
                   steps={craft.steps}
+                  aiOutput={craftDetails}
                   saved={false}
                 />
                ))
