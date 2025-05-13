@@ -88,8 +88,9 @@ const Collection = () => {
 
   console.log("box", box);
 
+  
   if (sortedItems.length === 0) {
-    return <p>Loading...</p>;
+    return <p>No items at this time</p>;
   }
 
   return (
