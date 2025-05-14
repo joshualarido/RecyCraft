@@ -10,6 +10,7 @@ const Crafts = () => {
   const [suggestedCrafts, setSuggestedCrafts] = useState([]);
   const sampleImage = "https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg";
 
+  //Just sample, remove after other's finished
   const addSampleCraftToIndexedDB = async () => {
     try {
       const db = await initDB();
@@ -33,9 +34,10 @@ const Crafts = () => {
     }
   };
 
+  //Generate Text (Not Needed Anymore)
   const callGemini = async (prompt) => {
     try {
-      const res = await axios.post("/gemini", { prompt });
+      const res = await axios.post("/gemini/text", { prompt });
       const reply = res.data.reply;
       const imageUrl = `data:${reply.mimeType};base64,${reply.image}`;
       setGeneratedImage(imageUrl);
@@ -44,6 +46,28 @@ const Crafts = () => {
     }
   };
 
+  //Handle Delete Button on ProgressBox
+  const handleDeleteCraft = async (id) => {
+    try {
+      const db = await initDB();
+      const tx = db.transaction("crafts", "readwrite");
+      const store = tx.objectStore("crafts");
+
+      await store.delete(id);
+
+      tx.oncomplete = () => {
+        console.log(`Craft with id ${id} deleted`);
+        setCrafts((prev) => prev.filter((c) => c.id !== id));
+      };
+
+      tx.onerror = (e) => console.error("Delete error", e);
+    } catch (error) {
+      console.error("IndexedDB delete error:", error);
+    }
+  };
+
+  //loadCraftsFromIndexedDB -> createSuggestion -> generateImagesForSuggestions
+  //Retrieve 2 Data From IDB Craft
   const loadCraftsFromIndexedDB = async () => {
     try {
       const db = await initDB();
@@ -79,25 +103,7 @@ const Crafts = () => {
     }
   };
 
-  const handleDeleteCraft = async (id) => {
-    try {
-      const db = await initDB();
-      const tx = db.transaction("crafts", "readwrite");
-      const store = tx.objectStore("crafts");
-
-      await store.delete(id);
-
-      tx.oncomplete = () => {
-        console.log(`Craft with id ${id} deleted`);
-        setCrafts((prev) => prev.filter((c) => c.id !== id));
-      };
-
-      tx.onerror = (e) => console.error("Delete error", e);
-    } catch (error) {
-      console.error("IndexedDB delete error:", error);
-    }
-  };
-
+  //Generate Craft (Text) from 2 Data (loadCraftsFromIndexedDB)
   const createSuggestion = async (items) => {
     const formattedItems = items
       .map(
@@ -160,7 +166,7 @@ Return the suggestions strictly in this JSON format. Do not include any explanat
   ]
 }
   Do NOT use triple backticks or any Markdown formatting.
-  It must be reiterated that the start of the output should NOT start with \\\JSON or end with \\\ either.
+  It must be reiterated that the start of the output should NOT start with \`\`\`JSON or end with \`\`\` either.
 `;
 
     try {
@@ -179,6 +185,7 @@ Return the suggestions strictly in this JSON format. Do not include any explanat
     }
   };
 
+  //Genearte Craft (Image) from (handleDeleteCraft)
   const generateImagesForSuggestions = async (crafts) => {
     const craftsWithImages = await Promise.all(
       crafts.map(async (craft) => {
@@ -190,18 +197,17 @@ Return the suggestions strictly in this JSON format. Do not include any explanat
           return { ...craft, image: imageUrl };
         } catch (error) {
           console.error("Failed to generate image for:", craft.name, error);
-          return { ...craft, image: sampleImage }; // Fallback image
+          return { ...craft, image: sampleImage };
         }
       })
     );
-
     setSuggestedCrafts(craftsWithImages);
   };
 
   useEffect(() => {
     const load = async () => {
-      await addSampleCraftToIndexedDB();
-      await loadCraftsFromIndexedDB();
+      /* await addSampleCraftToIndexedDB();
+      await loadCraftsFromIndexedDB(); */
     };
     load();
   }, []);
@@ -228,15 +234,16 @@ Return the suggestions strictly in this JSON format. Do not include any explanat
         <h1 className="text-2xl font-semibold">Other Possible Crafts</h1>
         <div className="grid grid-cols-4 gap-4">
           {suggestedCrafts.map((craft, index) => (
-            <CraftBox
-              key={index}
-              item={craft.name}
-              description={craft.description}
-              steps={craft.steps}
-              image={craft.image || sampleImage}
-              saved={false}
-            />
-          ))}
+              <CraftBox
+                key={index}
+                item={craft.name}
+                description={craft.description}
+                steps={craft.steps}
+                image={craft.image || sampleImage}
+                saved={false}
+              />
+            ))
+          }
         </div>
       </div>
     </div>
