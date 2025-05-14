@@ -41,7 +41,13 @@ const ViewDetails = () => {
   if (loading) return <p className="text-center">Loading craft...</p>;
   if (!craft) return <p className="text-center">Craft not found.</p>;
 
-  const steps = craft.steps.split("\n");
+  //Some of the datas are array and some step by step
+  const steps = Array.isArray(craft.steps)
+  ? craft.steps
+  : typeof craft.steps === "string"
+  ? craft.steps.split("\n")
+  : [];
+
   const barProgress = Math.floor((stepProgress / steps.length) * 100);
 
   return (

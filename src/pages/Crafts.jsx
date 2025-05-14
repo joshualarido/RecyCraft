@@ -67,6 +67,10 @@ const Crafts = () => {
     }
   };
 
+  const handleSaveCraft = (newCraft) => {
+    setCrafts((prev) => [...prev, newCraft]);
+  };
+
   //loadCraftsFromIndexedDB -> createSuggestion -> generateImagesForSuggestions
   //Retrieve 2 Data From IDB Craft
   const loadCraftsFromIndexedDB = async () => {
@@ -247,6 +251,7 @@ Return the suggestions strictly in this JSON format. Do not include any explanat
                 steps={craft.steps}
                 image={craft.image || sampleImage}
                 saved={false}
+                onSave={handleSaveCraft}
               />
             ))
           )}

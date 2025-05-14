@@ -2,7 +2,7 @@ import { FaHammer } from "react-icons/fa6";
 import { FaBookmark, FaRegBookmark } from "react-icons/fa";
 import { initDB } from "../../db/indexedDB";
 import { useState, useEffect } from "react";
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
 import CraftDetails from "../pages/CraftDetails";
 const CraftBox = (props) => {
   const [saved, setSaved] = useState(false);
@@ -12,47 +12,46 @@ const CraftBox = (props) => {
     if (props.saved) setSaved(true);
   }, [props.saved]);
 
-  const saveCraftToIndexedDB = async (itemName, itemDesc, itemSteps) => {
+  const saveCraftToIndexedDB = async (
+    itemName,
+    itemDesc,
+    itemSteps,
+    itemImage
+  ) => {
     const db = await initDB();
     const tx = db.transaction("crafts", "readwrite");
     const store = tx.objectStore("crafts");
 
-    const craftData = { name: itemName, description: itemDesc, steps: itemSteps };
+    const craftData = {
+      title: itemName,
+      description: itemDesc,
+      steps: itemSteps,
+      image: itemImage,
+      progress: 0, // starting progress
+    };
+
     const request = store.add(craftData);
 
     request.onsuccess = (e) => {
       console.log("Saved to DB with id:", e.target.result);
       setSaved(true);
       setSavedId(e.target.result);
+      if (props.onSave) {
+        props.onSave({ ...craftData, id: e.target.result });
+      }
     };
-    request.onerror = (e) => console.error("Save error", e);
-  };
-
-  const removeCraftFromIndexedDB = async () => {
-    if (savedId == null) {
-      console.warn("Cannot delete: No saved ID found");
-      return;
-    }
-
-    const db = await initDB();
-    const tx = db.transaction("crafts", "readwrite");
-    const store = tx.objectStore("crafts");
-
-    const request = store.delete(savedId);
-
-    request.onsuccess = () => {
-      console.log("Removed from DB");
-      setSaved(false);
-      setSavedId(null);
-    };
-    request.onerror = (e) => console.error("Delete error", e);
   };
 
   const toggleSave = () => {
     if (saved) {
       removeCraftFromIndexedDB();
     } else {
-      saveCraftToIndexedDB(props.item, props.description, props.steps);
+      saveCraftToIndexedDB(
+        props.item,
+        props.description,
+        props.steps,
+        props.image
+      );
     }
   };
 
@@ -73,21 +72,31 @@ const CraftBox = (props) => {
             className="text-lg transition-colors cursor-pointer pt-2 hover:text-emerald-600"
             onClick={toggleSave}
           >
-            {saved ? <FaBookmark className="text-emerald-600" /> : <FaRegBookmark />}
+            {saved ? (
+              <FaBookmark className="text-emerald-600" />
+            ) : (
+              <FaRegBookmark />
+            )}
           </h1>
         </div>
 
-        <p className="text-sm text-gray-600 mb-4 max-sm:text-xs max-sm:mb-2">{props.description}</p>
+        <p className="text-sm text-gray-600 mb-4 max-sm:text-xs max-sm:mb-2">
+          {props.description}
+        </p>
 
-        <Link to={"/craftdetails"} 
-                  state={{ craft: {
-                    name: props.item,
-                    description: props.description,
-                    steps: props.steps,
-                    image: props.image
-                  } }}
-        className="btn btn-ghost btn-sm w-full flex items-center justify-center gap-2 border mt-1 bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition rounded-md
-                          max-sm:text-sm">
+        <Link
+          to={"/craftdetails"}
+          state={{
+            craft: {
+              name: props.item,
+              description: props.description,
+              steps: props.steps,
+              image: props.image,
+            },
+          }}
+          className="btn btn-ghost btn-sm w-full flex items-center justify-center gap-2 border mt-1 bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition rounded-md
+                          max-sm:text-sm"
+        >
           <FaHammer className="text-lg" />
           Craft
         </Link>
