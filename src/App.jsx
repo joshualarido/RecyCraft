@@ -9,17 +9,19 @@ import Crafts from "./pages/Crafts";
 import CraftDetails from "./pages/CraftDetails";
 import NotFound from "./pages/NotFound";
 import Camera_Results from "./pages/Camera_Results";
+import ViewDetails from "./pages/ViewDetails";
 
 function App() {
-
   useEffect(() => {
-    initDB().then((db) => {
-      console.log("Database initialized", db);
-    }).catch((err) => {
-      console.error("DB init error:", err);
-    });
+    initDB()
+      .then((db) => {
+        console.log("Database initialized", db);
+      })
+      .catch((err) => {
+        console.error("DB init error:", err);
+      });
   }, []);
-  
+
   return (
     <>
       <div className="w-screen h-screen flex flex-row overflow-hidden">
@@ -33,6 +35,7 @@ function App() {
             <Route path="/collection" element={<Collection />} />
             <Route path="/crafts" element={<Crafts />} />
             <Route path="/craftdetails" element={<CraftDetails />} />
+            <Route path="/viewdetails/:id" element={<ViewDetails />} />
             <Route path="/404" element={<NotFound />} />
 
             <Route path="*" element={<Navigate to="/404" replace />} />

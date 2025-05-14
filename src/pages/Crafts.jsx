@@ -8,6 +8,7 @@ const Crafts = () => {
   const [generatedImage, setGeneratedImage] = useState(null);
   const [crafts, setCrafts] = useState([]);
   const [suggestedCrafts, setSuggestedCrafts] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(true);
   const sampleImage = "https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg";
 
   //Just sample, remove after other's finished
@@ -187,6 +188,7 @@ Return the suggestions strictly in this JSON format. Do not include any explanat
 
   //Genearte Craft (Image) from (handleDeleteCraft)
   const generateImagesForSuggestions = async (crafts) => {
+    setLoadingSuggestions(true);
     const craftsWithImages = await Promise.all(
       crafts.map(async (craft) => {
         const prompt = `Generate an image for a recycled craft project called "${craft.name}". It is described as: ${craft.description}`;
@@ -202,12 +204,13 @@ Return the suggestions strictly in this JSON format. Do not include any explanat
       })
     );
     setSuggestedCrafts(craftsWithImages);
+    setLoadingSuggestions(false);
   };
 
   useEffect(() => {
     const load = async () => {
-      /* await addSampleCraftToIndexedDB();
-      await loadCraftsFromIndexedDB(); */
+      await addSampleCraftToIndexedDB();
+      await loadCraftsFromIndexedDB();
     };
     load();
   }, []);
@@ -233,7 +236,10 @@ Return the suggestions strictly in this JSON format. Do not include any explanat
       <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-semibold">Other Possible Crafts</h1>
         <div className="grid grid-cols-4 gap-4">
-          {suggestedCrafts.map((craft, index) => (
+          {loadingSuggestions ? (
+            <p className="text-lg col-span-4">Loading...</p>
+          ) : (
+            suggestedCrafts.map((craft, index) => (
               <CraftBox
                 key={index}
                 item={craft.name}
@@ -243,7 +249,7 @@ Return the suggestions strictly in this JSON format. Do not include any explanat
                 saved={false}
               />
             ))
-          }
+          )}
         </div>
       </div>
     </div>

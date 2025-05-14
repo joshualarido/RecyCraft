@@ -18,12 +18,12 @@ const CraftBox = (props) => {
     const store = tx.objectStore("crafts");
 
     const craftData = { name: itemName, description: itemDesc, steps: itemSteps };
-    const request = store.add(craftData); // let IndexedDB auto-generate the id
+    const request = store.add(craftData);
 
     request.onsuccess = (e) => {
       console.log("Saved to DB with id:", e.target.result);
       setSaved(true);
-      setSavedId(e.target.result); // ✅ store the ID
+      setSavedId(e.target.result);
     };
     request.onerror = (e) => console.error("Save error", e);
   };
@@ -50,7 +50,7 @@ const CraftBox = (props) => {
 
   const toggleSave = () => {
     if (saved) {
-      removeCraftFromIndexedDB(); // now we have correct ID
+      removeCraftFromIndexedDB();
     } else {
       saveCraftToIndexedDB(props.item, props.description, props.steps);
     }
