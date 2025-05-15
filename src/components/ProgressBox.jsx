@@ -1,5 +1,6 @@
 import { IoSearch } from "react-icons/io5";
 import { FaRegTrashCan } from "react-icons/fa6";
+import { Link } from "react-router-dom";
 
 const ProgressBox = ({ id, item, image, progress, onDelete }) => {
   return (
@@ -24,10 +25,13 @@ const ProgressBox = ({ id, item, image, progress, onDelete }) => {
           </button>
         </div>
 
-        <button className="btn btn-ghost btn-sm w-full flex items-center justify-center gap-2 border mt-1 bg-emerald-100 text-emerald-600">
+        <Link
+          to={`/viewdetails/${id}`}
+          className="btn btn-ghost btn-sm w-full flex items-center justify-center gap-2 border mt-1 bg-emerald-100 text-emerald-600"
+        >
           <IoSearch className="text-lg" />
           View
-        </button>
+        </Link>
 
         <div className="flex items-center gap-2 mt-3">
           <p className="text-sm text-gray-500 whitespace-nowrap">Progress</p>
@@ -36,9 +40,7 @@ const ProgressBox = ({ id, item, image, progress, onDelete }) => {
             value={progress}
             max="100"
           ></progress>
-          <p className="text-sm text-gray-700 whitespace-nowrap">
-            {progress}%
-          </p>
+          <p className="text-sm text-gray-700 whitespace-nowrap">{progress}%</p>
         </div>
       </div>
     </div>
