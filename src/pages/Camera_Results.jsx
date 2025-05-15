@@ -167,23 +167,23 @@ const Camera_Results = () => {
 };
 
   const clearTempAI = async () => {
-  const db = await initDB();
-  const tx = db.transaction("tempAI", "readwrite");
-  const store = tx.objectStore("tempAI");
+    const db = await initDB();
+    const tx = db.transaction("tempAI", "readwrite");
+    const store = tx.objectStore("tempAI");
 
-  const clearRequest = store.clear();
+    const clearRequest = store.clear();
 
-  clearRequest.onsuccess = () => {
-    console.log("Cleared tempAI store");
-    setCraftsArray([]); // Reset UI list
-    setSuggestionBatchStarted(false); // Allow regenerate
-    generateInitialSuggestions(); // Trigger regeneration
+    clearRequest.onsuccess = () => {
+      console.log("Cleared tempAI store");
+      setCraftsArray([]); // Reset UI list
+      setSuggestionBatchStarted(false); // Allow regenerate
+      generateInitialSuggestions(); // Trigger regeneration
+    };
+
+    clearRequest.onerror = (e) => {
+      console.error("Failed to clear tempAI store:", e);
+    };
   };
-
-  clearRequest.onerror = (e) => {
-    console.error("Failed to clear tempAI store:", e);
-  };
-};
 
   const createSuggestion = async (image) => {
     const prompt = `
@@ -299,6 +299,8 @@ const Camera_Results = () => {
     return `data:${mimeType};base64,${base64}`;
   };
 
+  if(itemDetails) console.log("imageimai", itemDetails.name)
+
   return (
       <>
       <div className='flex flex-col gap-6'>
@@ -352,17 +354,18 @@ const Camera_Results = () => {
           <button className="text-2xl text-gray-600 hover:text-black transition" onClick={clearTempAI}><IoIosRefresh /></button>
           </div>
           <div className="flex flex-row justify-between gap-4">
-            {craftsArray.length > 0 ? (
+            {craftsArray.length > 0 && itemDetails ? (
               craftsArray.map((craft, index) => (
                 <CraftBox
-                  key={index}
+                 key={index}
                  craft={craft}
-                item={craft.title}
+                 item={craft.title}
                  image={craft.image}
                  description={craft.description}
                  steps={craft.steps}
                  aiOutput={craft}
                  saved={false}
+                 materials={itemDetails.name}
                 />
                ))
                 ) : (
