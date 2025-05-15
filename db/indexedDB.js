@@ -36,8 +36,22 @@ export const initDB = () => {
         store.createIndex("description", "description");
         store.createIndex("progress", "progress");
       }
+
+      if (!db.objectStoreNames.contains("tempAI")) {
+        const store = db.createObjectStore("tempAI", {
+          keyPath: "id",
+          autoIncrement: true,
+        });
+        store.createIndex("image", "image");
+        store.createIndex("title", "title");
+        store.createIndex("materials", "materials");
+        store.createIndex("steps", "steps");
+        store.createIndex("description", "description");
+        store.createIndex("progress", "progress");
+      }
     };
 
+   
     request.onsuccess = (event) => {
       dbInstance = event.target.result;
       resolve(dbInstance);
@@ -48,3 +62,5 @@ export const initDB = () => {
     };
   });
 };
+
+

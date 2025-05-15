@@ -24,6 +24,18 @@ const Camera = () => {
 
         const blob = base64ToBlob(imageSrc);
         console.log(blob)
+
+         try {
+        const db = await initDB();
+        const tx = db.transaction("tempAI", "readwrite");
+        const store = tx.objectStore("tempAI");
+        store.clear(); // This clears all entries in tempAI
+        tx.oncomplete = () => console.log("tempAI cleared before capture.");
+        tx.onerror = (e) => console.error("Error clearing tempAI:", e);
+    } catch (e) {
+        
+        console.error("DB error while clearing tempAI:", e);
+    }
         await saveImageToCameraIdb(blob);
     }, [webcamRef]);
 
@@ -140,18 +152,22 @@ const Camera = () => {
 
   
 
-    const handleClickSave=async()=>{
-        console.log("clicky")
-        setLoading(true);
-        try {
-            await detectObject(image); // your async function
-            navigate("/collection");   // programmatic navigation instead of <Link>
-        } catch (error) {
-            console.error("Error:", error);
-        } finally {
-            setLoading(false);
-        }
-    }
+   const handleClickSave = async () => {
+  console.log("clicky");
+  setLoading(true);
+  try {
+    // Strip prefix if present:
+    const base64Image = image.includes('base64,') ? image.split('base64,')[1] : image;
+
+    await detectObject(base64Image); // pass base64 only without prefix
+
+    navigate("/collection");
+  } catch (error) {
+    console.error("Error:", error);
+  } finally {
+    setLoading(false);
+  }
+}
 
 
     if (loading) {

@@ -3,6 +3,7 @@ import { useState, useEffect } from "react"
 import { initDB } from '../../db/indexedDB';
 import axios from "axios"
 import Crafts from './CraftDetails';
+import { IoIosRefresh } from "react-icons/io";
 
 const Camera_Results = () => {
   const [imageSrc, setImageSrc] = useState(null);
@@ -15,14 +16,19 @@ const Camera_Results = () => {
   const [genImageSrc, setGenImageSrc] = useState(null);
 
 
-  useEffect(() => {
-    loadImage();
-  }, []);
+  
 
   // Saves itemDetails to collection
-  useEffect(()=>{
+ useEffect(() => {
+  if (itemDetails) {
     saveDetails();
-  }, [itemDetails])
+  }
+}, [itemDetails]);
+
+  useEffect(() => {
+  loadImage();
+  loadCraftsFromTempAI(); // Load previous suggestions
+}, []);
 
   useEffect(() => {
 
@@ -122,6 +128,36 @@ const Camera_Results = () => {
     }
   };
 
+    const loadCraftsFromTempAI = async () => {
+  const db = await initDB();
+  const tx = db.transaction("tempAI", "readonly");
+  const store = tx.objectStore("tempAI");
+
+  const request = store.getAll();
+  request.onsuccess = () => {
+    setCraftsArray(request.result);
+  };
+};
+
+  const clearTempAI = async () => {
+  const db = await initDB();
+  const tx = db.transaction("tempAI", "readwrite");
+  const store = tx.objectStore("tempAI");
+
+  const clearRequest = store.clear();
+
+  clearRequest.onsuccess = () => {
+    console.log("Cleared tempAI store");
+    setCraftsArray([]); // Reset UI list
+    setSuggestionBatchStarted(false); // Allow regenerate
+    generateInitialSuggestions(); // Trigger regeneration
+  };
+
+  clearRequest.onerror = (e) => {
+    console.error("Failed to clear tempAI store:", e);
+  };
+};
+
   const createSuggestion = async (image) => {
     const prompt = `
       You are to analyze an image of an object and return one of several possible recyclable ideas made out of it.
@@ -153,7 +189,25 @@ const Camera_Results = () => {
         const parsed = JSON.parse(reply);
         const imageSrc = await generateImage(parsed.name, parsed.description);
         parsed.image = imageSrc; 
-        setCraftsArray(prev => [...prev, parsed]);
+        parsed.progress = 0;
+
+        const db = await initDB();
+         const tx = db.transaction("tempAI", "readwrite");
+        const store = tx.objectStore("tempAI");
+        const request = store.add({
+        title: parsed.name,
+        description: parsed.description,
+        image: parsed.image,
+        steps: parsed.steps,
+        progress: parsed.progress,
+      });
+
+       request.onsuccess = () => {
+        console.log("Saved generated craft to tempAI");
+        loadCraftsFromTempAI(); 
+      };
+
+        
         console.log("Parsed Gemini suggestion:", genImageSrc);
       } catch (jsonError) {
         console.error("Failed to parse Gemini reply as JSON:", jsonError);
@@ -164,11 +218,33 @@ const Camera_Results = () => {
     }
   };
 
-  const generateInitialSuggestions = async () => {
-    for (let i = 0; i < 4; i++) {
+ const generateInitialSuggestions = async () => {
+  const db = await initDB();
+  const tx = db.transaction("tempAI", "readonly");
+  const store = tx.objectStore("tempAI");
+  
+  const getAllRequest = store.getAll();
+  
+  getAllRequest.onsuccess = async () => {
+    const existing = getAllRequest.result;
+    const remaining = 4 - existing.length;
+
+    if (remaining <= 0) {
+      console.log("Already have 4 suggestions. Skipping generation.");
+      return;
+    }
+
+    for (let i = 0; i < remaining; i++) {
       await createSuggestion(imageBase64);
     }
+
+    await loadCraftsFromTempAI();
   };
+
+  getAllRequest.onerror = (e) => {
+    console.error("Failed to count existing suggestions:", e);
+  };
+};
 
   const generateImage = async (item, description) => {
     const prompt = `
@@ -244,24 +320,27 @@ const Camera_Results = () => {
         </div>
 
         <div className='flex flex-col gap-4'>
+          <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold">Simple Recycle Suggestions</h1>
+          <button className="text-2xl text-gray-600 hover:text-black transition" onClick={clearTempAI}><IoIosRefresh /></button>
+          </div>
           <div className="flex flex-row justify-between gap-4">
             {craftsArray.length > 0 ? (
               craftsArray.map((craft, index) => (
                 <CraftBox
                   key={index}
-                  craft={craft}
-                  item={craft.name}
-                  image={craft.image}
-                  description={craft.description}
-                  steps={craft.steps}
-                  aiOutput={craft}
-                  saved={false}
+                 craft={craft}
+                item={craft.title}
+                 image={craft.image}
+                 description={craft.description}
+                 steps={craft.steps}
+                 aiOutput={craft}
+                 saved={false}
                 />
-              ))
-            ) : (
-              <h1>Loading...</h1>
-            )}
+               ))
+                ) : (
+                   <h1>Loading...</h1>
+                )}
           </div>
         </div>
 

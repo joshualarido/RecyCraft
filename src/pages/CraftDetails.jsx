@@ -7,13 +7,25 @@ import { useState } from 'react'
 import { useLocation } from "react-router-dom";
 
 
+
 const Crafts = () => {
     const location = useLocation();
     const craft  = location.state?.craft;
     const steps = craft?.steps;
 
-    const [StepProgress, setStepProgress] = useState(0);
-    const barProgress = Math.floor(StepProgress/steps.length*100);
+    const [clickedSteps, setClickedSteps] = useState(() =>
+  steps ? steps.map(() => false) : []
+);
+const handleStepClick = (index) => {
+  const updated = [...clickedSteps];
+  updated[index] = !updated[index];
+  setClickedSteps(updated);
+};
+
+const StepProgress = clickedSteps.filter(Boolean).length;
+    const barProgress = Math.floor(StepProgress / steps.length * 100);
+
+    
     return (
         <>
         <div className="flex flex-col gap-4">
@@ -32,12 +44,8 @@ const Crafts = () => {
                     StepNumber={index + 1}
                     StepTitle=""
                     StepDescription={step}
-                    isClicked={index < StepProgress}
-                    onClick={() => {
-                        if (index === StepProgress) {
-                        setStepProgress((prev) => prev + 1);
-                        }
-                    }}
+                    isClicked={clickedSteps[index]}
+                    onClick={() => handleStepClick(index)}
                     />
             ))}
         </div>
