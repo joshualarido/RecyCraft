@@ -73,7 +73,7 @@ const Camera_Results = () => {
     const transaction = db.transaction("collections", "readwrite")
     const store = transaction.objectStore("collections")
 
-    const request = await store.put({ name: itemDetails.name, image:imageSrc, description: itemDetails.description, used:false })
+    const request = await store.put({ name: itemDetails.item, image:imageSrc, description: itemDetails.description, used:false })
     request.onerror=(error)=>console.error("Failed to put descriptions in collection idb", error)
     request.onsuccess=()=>console.log("Descriptions successfully in collections idb");
   }
@@ -82,7 +82,7 @@ const Camera_Results = () => {
     const prompt = `
       You are to analyze an image of an object and return a response describing it.
 
-      Strictly follow this format below. Do not include any commentary or explanation, only the JSON block:
+      Strictly follow this format below. Do not include any commentary or explanation, only the text block with no other formatting in this template:
 
       {
         "name": "string",                // The name of the item detected
@@ -121,7 +121,7 @@ const Camera_Results = () => {
     const prompt = `
       You are to analyze an image of an object alongside the name, and description provided of the item and return a response of a possible recyclable item made out of it.
 
-      Strictly follow this format below. Do not include any commentary or explanation, only the JSON block:
+      Strictly follow this format below. Do not include any commentary or explanation, only the text block with no other formatting in this template:
 
       {
         "crafts": [
@@ -222,22 +222,6 @@ const Camera_Results = () => {
         <div className='flex flex-col gap-4'>
           <h1 className="text-2xl font-bold">Simple Recycle Suggestions</h1>
           <div className="flex justify-between gap-4">
-              {/* <CraftBox 
-              item="Bottle Planter 5"
-              image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/>
-              <CraftBox 
-              item="Bottle Planter 5"
-              image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/>
-              <CraftBox 
-              item="Bottle Planter 5"
-              image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/>
-              <CraftBox 
-              item="Bottle Planter 5"
-              image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-              description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla at semper turpis, tempor egestas metus."/> */}
               {craftDetails ? (
               craftDetails.crafts.map((craft, index) => (
                 <CraftBox
