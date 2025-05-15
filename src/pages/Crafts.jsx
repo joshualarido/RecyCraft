@@ -169,40 +169,37 @@ const Crafts = () => {
     }
   };
 
-  //Generate Text + Image
-  const createSuggestions = async (collections) => {
-    setLoadingSuggestions(false);
-
-    const suggestions = [];
+    //Generate Text + Image
+    const createSuggestions = async (collections) => {
+    setSuggestedCrafts([]); // clear previous
+    setLoadingSuggestions(true); // show loading state
 
     for (let i = 0; i < 4; i++) {
       const formattedItems = collections
         .map(
           (item, idx) =>
-            `Item ${idx + 1}:\nName: ${item.name}\nDescription: ${
-              item.description
-            }`
+            `Item ${idx + 1}:\nName: ${item.name}\nDescription: ${item.description}`
         )
         .join("\n\n");
 
       const prompt = `
-You are given a list of recycled crafts with their names and descriptions. Use inspiration from at least two of them to suggest **one** new craft idea.
+        You are given a list of recycled crafts with their names and descriptions. Use inspiration from at least two of them to suggest **one** new craft idea.
 
-Respond strictly in this JSON format:
+        Respond strictly in this JSON format:
+        {
+          "craft": {
+            "name": "string",
+            "description": "string",
+            "steps": ["string", "string", "string", "string"]
+          }
+        }
 
-{
-  "craft": {
-    "name": "string",
-    "description": "string",
-    "steps": ["string", "string", "string", "string"],
-  }
-}
+        Do NOT use triple backticks or any Markdown formatting.
+        It must be reiterated that the start of the output should NOT start with \`\`\`JSON or end with \`\`\` either.
 
-  Do NOT use triple backticks or any Markdown formatting.
-  It must be reiterated that the start of the output should NOT start with \`\`\`JSON or end with \`\`\` either.
-Here are the crafts:
-${formattedItems}
-`; // your updated prompt above
+        Here are the crafts:
+        ${formattedItems}
+      `;
 
       try {
         const res = await axios.post("/gemini/text", { prompt });
@@ -210,28 +207,28 @@ ${formattedItems}
         const parsed = JSON.parse(reply);
         const craft = parsed.craft;
 
-        // Generate image for each individual suggestion
+        // Generate image
         const imagePrompt = `Generate an image for a recycled craft project called "${craft.name}". It is described as: ${craft.description}`;
         try {
-          const imageRes = await axios.post("/gemini/image", {
-            prompt: imagePrompt,
-          });
+          const imageRes = await axios.post("/gemini/image", { prompt: imagePrompt });
           const imageReply = imageRes.data.reply;
-          const imageUrl = `data:${imageReply.mimeType};base64,${imageReply.image}`;
-          craft.image = imageUrl;
+          craft.image = `data:${imageReply.mimeType};base64,${imageReply.image}`;
         } catch {
           craft.image = sampleImage;
         }
 
-        suggestions.push(craft);
-        setSuggestedCrafts([...suggestions]); // Update as each craft is added
+        // Render each immediately
+        setSuggestedCrafts((prev) => [...prev, craft]);
+
       } catch (error) {
         console.error("Failed to generate suggestion:", error);
       }
     }
 
-    setLoadingSuggestions(true);
+    setLoadingSuggestions(false); // all done
   };
+
+
 
   useEffect(() => {
     const load = async () => {
@@ -266,7 +263,9 @@ ${formattedItems}
       <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-semibold">Other Possible Crafts</h1>
         <div className="grid grid-cols-4 gap-4">
-          {loadingSuggestions ? (
+          {loadingSuggestions && suggestedCrafts.length === 0 ? (
+            <p className="text-lg col-span-4">Loading...</p>
+          ) : (
             suggestedCrafts.map((craft, index) => (
               <CraftBox
                 key={index}
@@ -278,8 +277,6 @@ ${formattedItems}
                 onSave={handleSaveCraft}
               />
             ))
-          ) : (
-            <p className="text-lg col-span-4">Loading...</p>
           )}
         </div>
       </div>

@@ -15,25 +15,24 @@ const Camera_Results = () => {
   const [genImageBase64, setGenImageBase64] = useState(null);
   const [genImageSrc, setGenImageSrc] = useState(null);
 
-
-  
-
   // Saves itemDetails to collection
- useEffect(() => {
-  if (itemDetails) {
-    saveDetails();
-  }
-}, [itemDetails]);
+  useEffect(() => {
+    if (itemDetails) {
+      saveDetails();
+    }
+  }, [itemDetails]);
 
   useEffect(() => {
-  loadImage();
-  loadCraftsFromTempAI(); // Load previous suggestions
-}, []);
+    loadImage();
+    loadCraftsFromTempAI(); // Load previous suggestions
+  }, []);
 
   useEffect(() => {
 
     if (itemDetails && imageBase64 && !suggestionBatchStarted) {
-      generateInitialSuggestions();
+      if (itemDetails.recyclable) {
+        generateInitialSuggestions();
+      }
       setSuggestionBatchStarted(true);
     }
     
@@ -98,9 +97,9 @@ const Camera_Results = () => {
 
       {
         "name": "string",                // The name of the item detected
-        "description": "string",         // A concise 3-sentence description of the item, ignoring the environment of the item.
+        "description": "string",         // A concise 3-sentence description of the item, ignoring the environment of the item. describe it straightforwardly skipping buzzwords and start with an immediate "A/An...", no saying what is "visible", just say it how it is and describe the image instead of trying to tell someone what you see. Avoid pronoun usage.
         "size_estimate": "string",       // Estimate the size in the format L x W x H, e.g., "30cm x 20cm x 10cm"
-        "recyclable": true | false       // Use a boolean: true if it can be reused/recycled, false if not
+        "recyclable": true | false       // Use a boolean: true if it can be reused/recycled, false if not. Recyclable is defined by the ability to make something new from the current item being parsed. avoid marking true if the item is organic, looks expensive, or looks like absolute junk that has barely any uses and cannot be made into much stuff.
       }
 
       Do NOT use triple backticks or any Markdown formatting.
@@ -128,35 +127,35 @@ const Camera_Results = () => {
     }
   };
 
-    const loadCraftsFromTempAI = async () => {
-  const db = await initDB();
-  const tx = db.transaction("tempAI", "readonly");
-  const store = tx.objectStore("tempAI");
+  const loadCraftsFromTempAI = async () => {
+    const db = await initDB();
+    const tx = db.transaction("tempAI", "readonly");
+    const store = tx.objectStore("tempAI");
 
-  const request = store.getAll();
-  request.onsuccess = () => {
-    setCraftsArray(request.result);
-  };
-};
-
-  const clearTempAI = async () => {
-  const db = await initDB();
-  const tx = db.transaction("tempAI", "readwrite");
-  const store = tx.objectStore("tempAI");
-
-  const clearRequest = store.clear();
-
-  clearRequest.onsuccess = () => {
-    console.log("Cleared tempAI store");
-    setCraftsArray([]); // Reset UI list
-    setSuggestionBatchStarted(false); // Allow regenerate
-    generateInitialSuggestions(); // Trigger regeneration
+    const request = store.getAll();
+    request.onsuccess = () => {
+      setCraftsArray(request.result);
+    };
   };
 
-  clearRequest.onerror = (e) => {
-    console.error("Failed to clear tempAI store:", e);
+    const clearTempAI = async () => {
+    const db = await initDB();
+    const tx = db.transaction("tempAI", "readwrite");
+    const store = tx.objectStore("tempAI");
+
+    const clearRequest = store.clear();
+
+    clearRequest.onsuccess = () => {
+      console.log("Cleared tempAI store");
+      setCraftsArray([]); // Reset UI list
+      setSuggestionBatchStarted(false); // Allow regenerate
+      generateInitialSuggestions(); // Trigger regeneration
+    };
+
+    clearRequest.onerror = (e) => {
+      console.error("Failed to clear tempAI store:", e);
+    };
   };
-};
 
   const createSuggestion = async (image) => {
     const prompt = `
@@ -324,26 +323,33 @@ const Camera_Results = () => {
           <h1 className="text-2xl font-bold">Simple Recycle Suggestions</h1>
           <button className="text-2xl text-gray-600 hover:text-black transition" onClick={clearTempAI}><IoIosRefresh /></button>
           </div>
-          <div className="flex flex-row justify-between gap-4">
-            {craftsArray.length > 0 ? (
-              craftsArray.map((craft, index) => (
-                <CraftBox
-                  key={index}
-                 craft={craft}
-                item={craft.title}
-                 image={craft.image}
-                 description={craft.description}
-                 steps={craft.steps}
-                 aiOutput={craft}
-                 saved={false}
-                />
-               ))
+          <div className="flex flex-row justify-start gap-4">
+            {itemDetails ? (
+              itemDetails.recyclable ? (
+                craftsArray.length > 0 ? (
+                  craftsArray.map((craft, index) => (
+                    <CraftBox
+                      key={index}
+                      craft={craft}
+                      item={craft.title}
+                      image={craft.image}
+                      description={craft.description}
+                      steps={craft.steps}
+                      aiOutput={craft}
+                      saved={false}
+                    />
+                  ))
                 ) : (
-                   <h1>Loading...</h1>
-                )}
+                  <h1>Loading...</h1>
+                )
+              ) : (
+                <h1>Craft is non-recyclable</h1>
+              )
+            ) : (
+              <h1>Loading item details...</h1>
+            )}
           </div>
         </div>
-
 
         <div className='flex flex-col gap-4'>
           <h1 className="text-2xl font-bold">Multifaceted Recycle Suggestions</h1>
