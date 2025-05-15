@@ -11,7 +11,7 @@ const Crafts = () => {
   const [loadingSuggestions, setLoadingSuggestions] = useState(true);
   const sampleImage = "https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg";
 
-  //Just sample, remove after other's finished
+  //Remove (addSampleCraftToIndexedDB + addSampleCollectionsToIndexedDB) after everything finishes
   const addSampleCraftToIndexedDB = async () => {
     try {
       const db = await initDB();
@@ -35,7 +35,6 @@ const Crafts = () => {
     }
   };
 
-  //Remove me
   const addSampleCollectionsToIndexedDB = async () => {
     try {
       const db = await initDB();
@@ -87,19 +86,7 @@ const Crafts = () => {
     }
   };
 
-  //Generate Text (Not Needed Anymore)
-  const callGemini = async (prompt) => {
-    try {
-      const res = await axios.post("/gemini/text", { prompt });
-      const reply = res.data.reply;
-      const imageUrl = `data:${reply.mimeType};base64,${reply.image}`;
-      setGeneratedImage(imageUrl);
-    } catch (error) {
-      console.error("Error calling Gemini API:", error);
-    }
-  };
-
-  //Handle Delete Button on ProgressBox
+  //Handle delete button on progressBox
   const handleDeleteCraft = async (id) => {
     try {
       const db = await initDB();
@@ -119,11 +106,12 @@ const Crafts = () => {
     }
   };
 
+  //Handle save button on craftBox
   const handleSaveCraft = (newCraft) => {
     setCrafts((prev) => [...prev, newCraft]);
   };
 
-  //Retrieve In Progress Data From IDB Craft
+  //Retrieve craft data from IDB
   const loadCraftsFromIndexedDB = async () => {
     try {
       const db = await initDB();
@@ -151,7 +139,7 @@ const Crafts = () => {
     }
   };
 
-  //Retrieve Collections from idb to send it into CreateSuggestion
+  //Retrieve Collections from idb 
   const loadCollectionsFromIndexedDB = async () => {
     try {
       const db = await initDB();
@@ -181,92 +169,9 @@ const Crafts = () => {
     }
   };
 
-  //Generate Craft (Text)
-  const createSuggestion = async (collections) => {
-    const formattedItems = collections
-      .map(
-        (item, idx) => `Item ${idx + 1}:
-Name: ${item.name}
-Description: ${item.description}`
-      )
-      .join("\n\n");
-
-    const prompt = `
-You are given a list of recycled crafts with their titles and descriptions. Using inspiration from more than two of them at a time, suggest four **new** craft ideas that creatively combine their **themes, materials, or purposes**.
-
-Here are the existing items:
-${formattedItems}
-
-Return your suggestions strictly in this JSON format (no extra text):
-
-{
-  "crafts": [
-    {
-      "name": "string",
-      "description": "string",
-      "steps": [
-        "string",
-        "string",
-        "string",
-        "string"
-      ]
-    },
-    {
-      "name": "string",
-      "description": "string",
-      "steps": [
-        "string",
-        "string",
-        "string",
-        "string"
-      ]
-    },
-    {
-      "name": "string",
-      "description": "string",
-      "steps": [
-        "string",
-        "string",
-        "string",
-        "string"
-      ]
-    },
-    {
-      "name": "string",
-      "description": "string",
-      "steps": [
-        "string",
-        "string",
-        "string",
-        "string"
-      ]
-    }
-  ]
-}
-
-  Do NOT use triple backticks or any Markdown formatting.
-  It must be reiterated that the start of the output should NOT start with \`\`\`JSON or end with \`\`\` either.
-`;
-
-    try {
-      const res = await axios.post("/gemini/text", { prompt });
-      const reply = res.data.reply.text;
-
-      try {
-        const parsed = JSON.parse(reply);
-        await generateImagesForSuggestions(parsed.crafts);
-      } catch (jsonError) {
-        console.error("Failed to parse Gemini reply as JSON:", jsonError);
-        console.log("Raw reply from Gemini:", reply);
-      }
-    } catch (error) {
-      console.error("Error calling Gemini API:", error);
-    }
-  };
-
-  //testing this shit
+  //Generate Text + Image
   const createSuggestions = async (collections) => {
-    setLoadingSuggestions(true);
+    setLoadingSuggestions(false);
 
     const suggestions = [];
 
@@ -289,7 +194,7 @@ Respond strictly in this JSON format:
   "craft": {
     "name": "string",
     "description": "string",
-    "steps": ["string", "string", "string", "string"]
+    "steps": ["string", "string", "string", "string"],
   }
 }
 
@@ -325,28 +230,7 @@ ${formattedItems}
       }
     }
 
-    setLoadingSuggestions(false);
-  };
-
-  //Genearte Craft (Image) from (handleDeleteCraft)
-  const generateImagesForSuggestions = async (crafts) => {
     setLoadingSuggestions(true);
-    const craftsWithImages = await Promise.all(
-      crafts.map(async (craft) => {
-        const prompt = `Generate an image for a recycled craft project called "${craft.name}". It is described as: ${craft.description}`;
-        try {
-          const res = await axios.post("/gemini/image", { prompt });
-          const reply = res.data.reply;
-          const imageUrl = `data:${reply.mimeType};base64,${reply.image}`;
-          return { ...craft, image: imageUrl };
-        } catch (error) {
-          console.error("Failed to generate image for:", craft.name, error);
-          return { ...craft, image: sampleImage };
-        }
-      })
-    );
-    setSuggestedCrafts(craftsWithImages);
-    setLoadingSuggestions(false);
   };
 
   useEffect(() => {
@@ -383,8 +267,6 @@ ${formattedItems}
         <h1 className="text-2xl font-semibold">Other Possible Crafts</h1>
         <div className="grid grid-cols-4 gap-4">
           {loadingSuggestions ? (
-            <p className="text-lg col-span-4">Loading...</p>
-          ) : (
             suggestedCrafts.map((craft, index) => (
               <CraftBox
                 key={index}
@@ -396,6 +278,8 @@ ${formattedItems}
                 onSave={handleSaveCraft}
               />
             ))
+          ) : (
+            <p className="text-lg col-span-4">Loading...</p>
           )}
         </div>
       </div>
