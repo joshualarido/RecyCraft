@@ -42,6 +42,26 @@ const CraftBox = (props) => {
     };
   };
 
+  const removeCraftFromIndexedDB = async () => {
+    if (savedId == null) {
+      console.warn("Cannot delete: No saved ID found");
+      return;
+    }
+
+    const db = await initDB();
+    const tx = db.transaction("crafts", "readwrite");
+    const store = tx.objectStore("crafts");
+
+    const request = store.delete(savedId);
+
+    request.onsuccess = () => {
+      console.log("Removed from DB");
+      setSaved(false);
+      setSavedId(null);
+    };
+    request.onerror = (e) => console.error("Delete error", e);
+  };
+
   const toggleSave = () => {
     if (saved) {
       removeCraftFromIndexedDB();

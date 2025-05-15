@@ -7,8 +7,13 @@ import Crafts from './CraftDetails';
 const Camera_Results = () => {
   const [imageSrc, setImageSrc] = useState(null);
   const [imageBase64, setImageBase64] = useState(null);
+  const [craftsArray, setCraftsArray] = useState([]);
   const [itemDetails, setItemDetails] = useState(null);
-  const [craftDetails, setCraftDetails] = useState(null);
+  const [suggestionBatchStarted, setSuggestionBatchStarted] = useState(false);
+  const [objectDetected, setObjectDetected] = useState(false);
+  const [genImageBase64, setGenImageBase64] = useState(null);
+  const [genImageSrc, setGenImageSrc] = useState(null);
+
 
   useEffect(() => {
     loadImage();
@@ -20,16 +25,17 @@ const Camera_Results = () => {
   }, [itemDetails])
 
   useEffect(() => {
-    if (imageBase64) {
-      detectObject(imageBase64); // only run when base64 is ready
-      
-    }
-  }, [imageBase64]);
 
-  useEffect(() => {
-    if (itemDetails && imageBase64) {
-      createSuggestion(imageBase64);
+    if (itemDetails && imageBase64 && !suggestionBatchStarted) {
+      generateInitialSuggestions();
+      setSuggestionBatchStarted(true);
     }
+    
+    if (imageBase64 && !objectDetected) {
+      detectObject(imageBase64);
+      setObjectDetected(true);
+    }
+
   }, [itemDetails, imageBase64]);
 
   const loadImage = async () => {
@@ -82,7 +88,7 @@ const Camera_Results = () => {
     const prompt = `
       You are to analyze an image of an object and return a response describing it.
 
-      Strictly follow this format below. Do not include any commentary or explanation, only the text block with no other formatting in this template:
+      Strictly follow this format below. Do not include any commentary or explanation, only the string text block with no other formatting in this template:
 
       {
         "name": "string",                // The name of the item detected
@@ -105,7 +111,7 @@ const Camera_Results = () => {
         parsed = JSON.parse(reply);
         setItemDetails(parsed);
         
-        console.log("Parsed Gemini output:", parsed);
+        console.log("Parsed Gemini object detection:", parsed);
       } catch (jsonError) {
         console.error("Failed to parse Gemini reply as JSON:", jsonError);
         console.log("Raw reply from Gemini:", reply);
@@ -117,59 +123,77 @@ const Camera_Results = () => {
   };
 
   const createSuggestion = async (image) => {
-
     const prompt = `
-      You are to analyze an image of an object alongside the name, and description provided of the item and return a response of a possible recyclable item made out of it.
+      You are to analyze an image of an object and return one of several possible recyclable ideas made out of it.
+      Think creatively and provide new ideas. Avoid repeating suggestions.
 
-      Strictly follow this format below. Do not include any commentary or explanation, only the text block with no other formatting in this template:
+      Strictly follow this format below. Do not include any commentary or explanation, only the string text block with no other formatting in this template:
 
       {
-        "crafts": [
-       {
-        "name": "string",                // The name of the possible recyclable item crafted.
-        "description": "string",         // A concise 2-sentence description of the possible recyclable item, assume the reader is blind, doesn't see an image. so make a vivid description that is easily imaginable
-        "steps": [ 
-                         // Provide steps on how to turn the original provided item, into the wanted recyclable item, seperated to minimal of 4 steps, in the specified format. 
-          "string",          // A concise 1, or 2 sentence of guiding follow-along step.
-          "string", 
-          "string"  // if 3 steps aren't enough, continue with the current format. don't forget to put commas after the closing bracket, and leaving out the comma at in the last step
+        "name": "string",         // Name of decided craft
+        "description": "string",  // Concise description of craft, 1-2 sentences. Assume the user does not have an image of the craft and is only able to use this description as a means of seeing the object.
+        "image": "string",        // Leave empty on output for now
+        "steps": [                // Steps as to what the user must do in order to make this craft by themselves.
+          "string",       
+          "string",
+          "string"                // There can be more than 3 steps if needed. make the steps detailed 
         ]
-       },  // this is what counts as one craft
-       {
-        "name": "string",                // The name of the possible recyclable item crafted.
-        "description": "string",         // A concise 1-sentence description of the possible recyclable item.
-        "steps": [                 // Provide steps on how to turn the original provided item, into the wanted recyclable item, seperated to minimal of 4 steps in the specified format. 
-          "string",          // A concise 1, or 2 sentence of guiding follow-along step.
-          "string", 
-          "string"  // if 3 steps aren't enough, continue with the current format. don't forget to put commas after the closing bracket, and leaving out the comma at in the last step
-        ]
-       } // now create a total of 4 crafts, don't forget to remove the comma at the last craft.
-      ]
-    }    
-      
+      }
 
       Do NOT use triple backticks or any Markdown formatting.
-      It must be reiterated that the start of the output should NOT start with \`\`\`JSON or end with \`\`\` either.
-    `
+      It must be reiterated that the start of the output should NOT start or end with \`\`\` either.
+    `;
+
     try {
       const res = await axios.post("/gemini/text", { prompt, image });
       const reply = res.data.reply.text;
 
-      // Attempt to parse the AI's response as JSON
       let parsed;
       try {
-        parsed = JSON.parse(reply);
-        setCraftDetails(parsed);
-        console.log("Parsed Gemini output:", parsed);
-        console.log(parsed.crafts);
+        const parsed = JSON.parse(reply);
+        const imageSrc = await generateImage(parsed.name, parsed.description);
+        parsed.image = imageSrc; 
+        setCraftsArray(prev => [...prev, parsed]);
+        console.log("Parsed Gemini suggestion:", genImageSrc);
       } catch (jsonError) {
         console.error("Failed to parse Gemini reply as JSON:", jsonError);
         console.log("Raw reply from Gemini:", reply);
       }
-      
     } catch (error) {
       console.error("Error calling Gemini API:", error);
     }
+  };
+
+  const generateInitialSuggestions = async () => {
+    for (let i = 0; i < 4; i++) {
+      await createSuggestion(imageBase64);
+    }
+  };
+
+  const generateImage = async (item, description) => {
+    const prompt = `
+      Generate an image of a/an ${item}.
+      Description: ${description}
+      Make it photorealistic, and the only subject of the scene.
+    `;
+
+    try {
+      const res = await axios.post("/gemini/image", { prompt });
+      const reply = res.data.reply;
+
+      const imageSrc = base64ToImageSrc(reply.image, reply.mimeType);
+      console.log("Gemini image generation:", imageSrc);
+
+      return imageSrc; // ✅ return the formatted image string
+    } catch (error) {
+      console.error("Error calling Gemini API:", error);
+      return null;
+    }
+  };
+
+
+  const base64ToImageSrc = (base64, mimeType = "image/png") => {
+    return `data:${mimeType};base64,${base64}`;
   };
 
   return (
@@ -221,25 +245,26 @@ const Camera_Results = () => {
 
         <div className='flex flex-col gap-4'>
           <h1 className="text-2xl font-bold">Simple Recycle Suggestions</h1>
-          <div className="flex justify-between gap-4">
-              {craftDetails ? (
-              craftDetails.crafts.map((craft, index) => (
+          <div className="flex flex-row justify-between gap-4">
+            {craftsArray.length > 0 ? (
+              craftsArray.map((craft, index) => (
                 <CraftBox
                   key={index}
                   craft={craft}
                   item={craft.name}
-                  image="https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg"
-                  description={craft.description} 
+                  image={craft.image}
+                  description={craft.description}
                   steps={craft.steps}
-                  aiOutput={craftDetails}
+                  aiOutput={craft}
                   saved={false}
                 />
-               ))
-                ) : (
+              ))
+            ) : (
               <h1>Loading...</h1>
             )}
           </div>
         </div>
+
 
         <div className='flex flex-col gap-4'>
           <h1 className="text-2xl font-bold">Multifaceted Recycle Suggestions</h1>
