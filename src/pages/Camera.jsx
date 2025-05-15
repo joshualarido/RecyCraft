@@ -93,43 +93,42 @@ const Camera = () => {
     };
 
     // scenario where save to collections is clicked, must generate details
-    const detectObject = async (images) => {
+    const detectObject = async (image) => {
         const prompt = `
-        Analyze the image and return the most likely object it depicts. Focus on clear and identifiable features of the object. 
-        If the object is in a container, do not confuse it with common bottles or jars. 
+            You are to analyze an image of an object and return a response describing it.
 
-        Strictly follow this format below. Do not include any commentary or explanation, only the JSON block:
+            Strictly follow this format below. Do not include any commentary or explanation, only the string text block with no other formatting in this template:
 
-        {
-            "name": "string",                // The name of the item detected
-            "description": "string",         // A concise 3-sentence description of the item, ignoring the environment of the item.
-            "size_estimate": "string",       // Estimate the size in the format L x W x H, e.g., "30cm x 20cm x 10cm"
-            "recyclable": true | false       // Use a boolean: true if it can be reused/recycled, false if not
-        }
+            {
+                "name": "string",                // The name of the item detected
+                "description": "string",         // A concise 3-sentence description of the item, ignoring the environment of the item. describe it straightforwardly skipping buzzwords and start with an immediate "A/An...", no saying what is "visible", just say it how it is and describe the image instead of trying to tell someone what you see. Avoid pronoun usage.
+                "size_estimate": "string",       // Estimate the size in the format L x W x H, e.g., "30cm x 20cm x 10cm"
+                "recyclable": true | false       // Use a boolean: true if it can be reused/recycled, false if not. Recyclable is defined by the ability to make something new from the current item being parsed. avoid marking true if the item is organic, looks expensive, or looks like absolute junk that has barely any uses and cannot be made into much stuff.
+            }
 
-        Do NOT use triple backticks or any Markdown formatting.
-        It must be reiterated that the start of the output should NOT start with \`\`\`JSON or end with \`\`\` either.
-        `
+            Do NOT use triple backticks or any Markdown formatting.
+            It must be reiterated that the start of the output should NOT start with \`\`\`JSON or end with \`\`\` either.
+        `;
 
         try {
-        const res = await axios.post("/gemini/text", { prompt, images });
-        console.log("Gemini raw data:", res.data);
-        const reply = res.data.reply.text;
+            const res = await axios.post("/gemini/text", { prompt, image });
+            const reply = res.data.reply.text;
 
-        // Attempt to parse the AI's response as JSON
-        let parsed;
-        try {
-            parsed = JSON.parse(reply);
-            setItemDetails(parsed);
-            
-            console.log("Parsed Gemini output:", parsed);
-        } catch (jsonError) {
-            console.error("Failed to parse Gemini reply as JSON:", jsonError);
-            console.log("Raw reply from Gemini:", reply);
-        }
-        
+            let parsed;
+            try {
+                parsed = JSON.parse(reply);
+                setItemDetails(parsed);
+                
+                console.log("Parsed Gemini object detection:", parsed);
+            } catch (jsonError) {
+                console.error("Failed to parse Gemini reply as JSON:", jsonError);
+                console.log("Raw reply from Gemini:", reply);
+            }
+
+            return parsed;
         } catch (error) {
-        console.error("Error calling Gemini API:", error);
+            console.error("Object detection failed:", error);
+            return null;
         }
     };
 
@@ -145,29 +144,51 @@ const Camera = () => {
         request.onsuccess=()=>console.log("Descriptions successfully in collections idb");
     }
     
-    useEffect(()=>{
-        saveDetails();
-        console.log("Details saved!");
-    }, [itemDetails])
+    // useEffect(()=>{
+    //     saveDetails();
+    //     console.log("Details saved!");
+    // }, [itemDetails])
 
   
 
-   const handleClickSave = async () => {
-  console.log("clicky");
-  setLoading(true);
-  try {
-    // Strip prefix if present:
-    const base64Image = image.includes('base64,') ? image.split('base64,')[1] : image;
+    const handleClickSave = async () => {
+        setLoading(true);
+        try {
+            const base64Image = image.includes("base64,") ? image.split("base64,")[1] : image;
+            const parsed = await detectObject(base64Image);
 
-    await detectObject(base64Image); // pass base64 only without prefix
+            if (!parsed) throw new Error("No object detected");
 
-    navigate("/collection");
-  } catch (error) {
-    console.error("Error:", error);
-  } finally {
-    setLoading(false);
-  }
-}
+            const db = await initDB();
+            const tx = db.transaction("collections", "readwrite");
+            const store = tx.objectStore("collections");
+
+            await new Promise((resolve, reject) => {
+            const request = store.put({
+                name: parsed.name,
+                image: image,
+                description: parsed.description,
+                used: false
+            });
+
+            request.onsuccess = () => {
+                console.log("Saved to collections successfully");
+                resolve(); // continue to navigate
+            };
+
+            request.onerror = (e) => {
+                console.error("Failed to write to IndexedDB:", e);
+                reject(e);
+            };
+            });
+
+            navigate("/collection");
+        } catch (error) {
+            console.error("Error during save flow:", error);
+        } finally {
+            setLoading(false); // Always reset loading
+        }
+    };
 
 
     if (loading) {
