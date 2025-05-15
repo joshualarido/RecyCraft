@@ -2,11 +2,12 @@ import { FaHammer } from "react-icons/fa6";
 import { FaBookmark, FaRegBookmark } from "react-icons/fa";
 import { initDB } from "../../db/indexedDB";
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import CraftDetails from "../pages/CraftDetails";
+import { useNavigate } from "react-router-dom";
+
 const CraftBox = (props) => {
   const [saved, setSaved] = useState(false);
-  const [savedId, setSavedId] = useState(null); // store the assigned id from IndexedDB
+  const [savedId, setSavedId] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (props.saved) setSaved(true);
@@ -27,19 +28,21 @@ const CraftBox = (props) => {
       description: itemDesc,
       steps: itemSteps,
       image: itemImage,
-      progress: 0, // starting progress
+      progress: 0,
     };
 
-    const request = store.add(craftData);
-
-    request.onsuccess = (e) => {
-      console.log("Saved to DB with id:", e.target.result);
-      setSaved(true);
-      setSavedId(e.target.result);
-      if (props.onSave) {
-        props.onSave({ ...craftData, id: e.target.result });
-      }
-    };
+    return new Promise((resolve, reject) => {
+      const request = store.add(craftData);
+      request.onsuccess = (e) => {
+        const newId = e.target.result;
+        console.log("Saved to DB with id:", newId);
+        setSaved(true);
+        setSavedId(newId);
+        if (props.onSave) props.onSave({ ...craftData, id: newId });
+        resolve(newId);
+      };
+      request.onerror = (e) => reject(e);
+    });
   };
 
   const removeCraftFromIndexedDB = async () => {
@@ -75,6 +78,24 @@ const CraftBox = (props) => {
     }
   };
 
+  const handleCraftClick = async () => {
+    if (saved) {
+      navigate(`/viewdetails/${savedId}`);
+    } else {
+      try {
+        const newId = await saveCraftToIndexedDB(
+          props.item,
+          props.description,
+          props.steps,
+          props.image
+        );
+        navigate(`/viewdetails/${newId}`);
+      } catch (e) {
+        console.error("Failed to auto-save before navigating:", e);
+      }
+    }
+  };
+
   return (
     <div className="card w-full bg-base-100 shadow-lg p-4">
       <div className="rounded-lg overflow-hidden mb-2">
@@ -104,22 +125,14 @@ const CraftBox = (props) => {
           {props.description}
         </p>
 
-        <Link
-          to={"/craftdetails"}
-          state={{
-            craft: {
-              name: props.item,
-              description: props.description,
-              steps: props.steps,
-              image: props.image,
-            },
-          }}
+        <button
+          onClick={handleCraftClick}
           className="btn btn-ghost btn-sm w-full flex items-center justify-center gap-2 border mt-1 bg-emerald-100 text-emerald-600 hover:bg-emerald-200 transition rounded-md
                           max-sm:text-sm"
         >
           <FaHammer className="text-lg" />
           Craft
-        </Link>
+        </button>
       </div>
     </div>
   );
