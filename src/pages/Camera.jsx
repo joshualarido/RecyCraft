@@ -23,7 +23,6 @@ const Camera = () => {
         setImage(imageSrc);
 
         const blob = base64ToBlob(imageSrc);
-        console.log(blob)
 
          try {
         const db = await initDB();
@@ -140,7 +139,8 @@ const Camera = () => {
         if(!itemDetails){
             return;
         }
-        const request = await store.put({ name: itemDetails.name, image:image, description: itemDetails.description, used:false })
+        const blob = base64ToBlob(image);
+        const request = await store.put({ name: itemDetails.name, image:blob, description: itemDetails.description, used:false })
         request.onerror=(error)=>console.error("Failed to put descriptions in collection idb", error)
         request.onsuccess=()=>console.log("Descriptions successfully in collections idb");
     }

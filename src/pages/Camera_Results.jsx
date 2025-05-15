@@ -15,7 +15,6 @@ const Camera_Results = () => {
   const [genImageBase64, setGenImageBase64] = useState(null);
   const [genImageSrc, setGenImageSrc] = useState(null);
 
-
   
 
   // Saves itemDetails to collection
@@ -80,14 +79,42 @@ const Camera_Results = () => {
     });
   };
 
+  // Converts base64 to blob
+  const base64ToBlob = (base64Data) => {
+      const mime = 'image/png'
+       const byteCharacters = atob(base64Data);
+  const byteArrays = [];
+
+  for (let i = 0; i < byteCharacters.length; i += 512) {
+    const slice = byteCharacters.slice(i, i + 512);
+    const byteNumbers = new Array(slice.length);
+    for (let j = 0; j < slice.length; j++) {
+      byteNumbers[j] = slice.charCodeAt(j);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    byteArrays.push(byteArray);
+  }
+
+  return new Blob(byteArrays, { type: mime });
+  };
+
   const saveDetails=async()=>{
     const db = await initDB()
     const transaction = db.transaction("collections", "readwrite")
     const store = transaction.objectStore("collections")
-
-    const request = await store.put({ name: itemDetails.item, image:imageSrc, description: itemDetails.description, used:false })
-    request.onerror=(error)=>console.error("Failed to put descriptions in collection idb", error)
-    request.onsuccess=()=>console.log("Descriptions successfully in collections idb");
+    const imageBlob = base64ToBlob(imageBase64)
+    
+    const readAll = await new Promise((resolve, reject) => {
+      const readReq = store.getAll();
+      readReq.onsuccess = () => resolve(readReq.result);
+      readReq.onerror = () => reject(readReq.error);
+    });
+    const found = readAll.some(item => item.name === itemDetails.name);
+    if(!found){
+      const request = await store.put({ name: itemDetails.name, image:imageBlob, description: itemDetails.description, used:false })
+      request.onerror=(error)=>console.error("Failed to put descriptions in collection idb", error)
+      request.onsuccess=()=>console.log("Descriptions successfully in collections idb");
+    }
   }
 
   const detectObject = async (image) => {
@@ -258,7 +285,7 @@ const Camera_Results = () => {
       const reply = res.data.reply;
 
       const imageSrc = base64ToImageSrc(reply.image, reply.mimeType);
-      console.log("Gemini image generation:", imageSrc);
+      // console.log("Gemini image generation:", imageSrc);
 
       return imageSrc; // ✅ return the formatted image string
     } catch (error) {
