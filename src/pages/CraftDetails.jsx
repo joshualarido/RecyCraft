@@ -17,13 +17,13 @@ const Crafts = () => {
     return (
         <>
         <div className="flex flex-col gap-4">
-            <h1 className="text-2xl font-bold">Craft Description</h1>
-            <div className="flex gap-4">
-                <CraftImageCard CraftImage={chido}/>
+            <h1 className="text-2xl font-bold">Craft Details</h1>
+            <div className="flex flex-row gap-4">
+                <CraftImageCard CraftImage={craft.image}/>
                 <CraftCard CraftName={craft.name} CraftDescription={craft.description} CraftUses={craft.description}/>
             </div>
             <div className="flex flex-col gap-4 w-full">
-                <h2 className="text-xl flex items-center font-semibold">Instructions ({StepProgress}/{steps.length})</h2>
+                <h1 className="text-2xl flex items-center font-semibold">Instructions ({StepProgress}/{steps.length})</h1>
                 <BigProgressBar progress={barProgress}/>
             </div>
             {steps.map((step, index) => (
