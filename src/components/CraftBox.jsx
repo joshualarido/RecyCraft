@@ -15,6 +15,8 @@ const CraftBox = (props) => {
 
 
 
+
+
   const saveCraftToIndexedDB = async (
       itemName,
       itemDesc,
@@ -25,7 +27,7 @@ const CraftBox = (props) => {
       const db = await initDB();
       const tx = db.transaction("crafts", "readwrite");
       const store = tx.objectStore("crafts");
-
+     
       const craftData = {
         title: itemName,
         description: itemDesc,
@@ -34,7 +36,9 @@ const CraftBox = (props) => {
         progress: 0, // starting progress
         materials: itemMat
       };
+      
 
+    
 
     return new Promise((resolve, reject) => {
       const request = store.add(craftData);
@@ -108,7 +112,8 @@ const CraftBox = (props) => {
         props.description,
         props.steps,
         props.image,
-        props.materials
+        props.materials,
+        props.image,
       );
       checkMatUsedCollectionDB(props.materials);
     }
