@@ -20,10 +20,10 @@ const Camera = () => {
 
     const capture = useCallback(async () => {
         const imageSrc = webcamRef.current.getScreenshot();
+        // console.log("raw image", imageSrc);
         setImage(imageSrc);
 
         const blob = base64ToBlob(imageSrc);
-        console.log(blob)
 
          try {
         const db = await initDB();
@@ -32,9 +32,19 @@ const Camera = () => {
         store.clear(); // This clears all entries in tempAI
         tx.oncomplete = () => console.log("tempAI cleared before capture.");
         tx.onerror = (e) => console.error("Error clearing tempAI:", e);
+        const tx2 = db.transaction("tempAIMulti", "readwrite");
+        const store2 = tx2.objectStore("tempAIMulti");
+        store2.clear(); // This clears all entries in tempAIMulti
+        tx2.oncomplete = () => console.log("tempAIMulti cleared before capture.");
+        tx2.onerror = (e) => console.error("Error clearing tempAIMulti:", e);
+        const tx3 = db.transaction("cameraTemp", "readwrite");
+        const store3 = tx3.objectStore("cameraTemp");
+        store3.clear(); // This clears all entries in cameraTemp
+        tx3.oncomplete = () => console.log("cameraTemp cleared before capture.");
+        tx3.onerror = (e) => console.error("Error clearing cameraTemp:", e);
     } catch (e) {
         
-        console.error("DB error while clearing tempAI:", e);
+        console.error("DB error while clearing tempAI or tempAIMulti:", e);
     }
         await saveImageToCameraIdb(blob);
     }, [webcamRef]);
@@ -56,34 +66,22 @@ const Camera = () => {
         reader.onloadend = async () => { // What the reader does when it's finished reading file
             const result = reader.result;
             setImage(result);
-
-            const blob = base64ToBlob(result);
-            await saveImageToCameraIdb(blob);
+            // console.log("raw image", result);
+            await saveImageToCameraIdb(result);
         };
 
         reader.readAsDataURL(file); // Read file
     };
 
-    const base64ToBlob = (base64Data) => {
-        const [header, base64] = base64Data.split(',');
-        const mime = header.match(/:(.*?);/)[1];
-        const binary = atob(base64);
-        const bytes = new Uint8Array(binary.length);
+    
 
-        for (let i = 0; i < binary.length; i++) {
-            bytes[i] = binary.charCodeAt(i);
-        }
-
-        return new Blob([bytes], { type: mime });
-    };
-
-    const saveImageToCameraIdb = async (blob) => {
+    const saveImageToCameraIdb = async (base64) => {
         const db = await initDB(); // access already defined DB
         const tx = db.transaction("camera", "readwrite"); // open transaction in table "images" for reading and writing
         const store = tx.objectStore("camera");
 
-        const request = store.put({ id: 1, image: blob }); // store item, only 1 image stored at a time
-        request.onsuccess = () => console.log("Put successful");
+        const request = store.put({ id: 1, image: base64 }); // store item, only 1 image stored at a time
+        request.onsuccess = () => console.log("Put base64 successful");
         request.onerror = (e) => console.error("Put error", e);
 
         return new Promise((resolve, reject) => {
@@ -132,14 +130,29 @@ const Camera = () => {
         }
     };
 
-    const saveDetails=async()=>{
+    const base64ToBlob = (base64Data, contentType = 'image/jpeg') => {
+        const byteCharacters = atob(base64Data.split(',')[1] || base64Data);
+        const byteArrays = [];
+
+        for (let i = 0; i < byteCharacters.length; i += 512) {
+            const slice = byteCharacters.slice(i, i + 512);
+            const byteNumbers = new Array(slice.length).fill(0).map((_, j) => slice.charCodeAt(j));
+            byteArrays.push(new Uint8Array(byteNumbers));
+        }
+
+        return new Blob(byteArrays, { type: contentType });
+    };
+
+    const saveDetails=async(imageSrc)=>{
         const db = await initDB()
         const transaction = db.transaction("collections", "readwrite")
         const store = transaction.objectStore("collections")
+        
         if(!itemDetails){
             return;
         }
-        const request = await store.put({ name: itemDetails.name, image:image, description: itemDetails.description, used:false })
+        const blob = base64ToBlob(image);
+        const request = await store.put({ name: itemDetails.name, image:blob, description: itemDetails.description, used: 0 })
         request.onerror=(error)=>console.error("Failed to put descriptions in collection idb", error)
         request.onsuccess=()=>console.log("Descriptions successfully in collections idb");
     }
@@ -149,7 +162,31 @@ const Camera = () => {
     //     console.log("Details saved!");
     // }, [itemDetails])
 
-  
+    
+    // convert base64 to multipart/form thing to be sent to ai
+    const base64ToFormData = (base64String, fieldName="image") => {
+        // Convert base64 string to a Blob
+        const byteCharacters = atob(base64String.split(',')[1]); // Remove data URL prefix if present
+        const byteArrays = [];
+
+        for (let offset = 0; offset < byteCharacters.length; offset += 1024) {
+            const slice = byteCharacters.slice(offset, offset + 1024);
+            const byteNumbers = new Array(slice.length);
+            for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+            }
+            byteArrays.push(new Uint8Array(byteNumbers));
+        }
+
+        const blob = new Blob(byteArrays, { type: 'application/octet-stream' });
+
+        // Create a FormData object and append the Blob
+        const formData = new FormData();
+        formData.append(fieldName, blob, 'file'); // 'file' is the filename
+
+        return formData;
+    }
+
 
     const handleClickSave = async () => {
         setLoading(true);
@@ -164,22 +201,25 @@ const Camera = () => {
             const store = tx.objectStore("collections");
 
             await new Promise((resolve, reject) => {
-            const request = store.put({
-                name: parsed.name,
-                image: image,
-                description: parsed.description,
-                used: false
-            });
+                
+                const imageBlob = base64ToBlob(image)
+                
+                const request = store.put({
+                    name: parsed.name,
+                    image: imageBlob,
+                    description: parsed.description,
+                    used: 0
+                });
 
-            request.onsuccess = () => {
-                console.log("Saved to collections successfully");
-                resolve(); // continue to navigate
-            };
+                request.onsuccess = () => {
+                    console.log("Saved to collections successfully");
+                    resolve(); // continue to navigate
+                };
 
-            request.onerror = (e) => {
-                console.error("Failed to write to IndexedDB:", e);
-                reject(e);
-            };
+                request.onerror = (e) => {
+                    console.error("Failed to write to IndexedDB:", e);
+                    reject(e);
+                };
             });
 
             navigate("/collection");

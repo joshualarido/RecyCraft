@@ -13,23 +13,32 @@ const CraftBox = (props) => {
     if (props.saved) setSaved(true);
   }, [props.saved]);
 
-  const saveCraftToIndexedDB = async (
-    itemName,
-    itemDesc,
-    itemSteps,
-    itemImage
-  ) => {
-    const db = await initDB();
-    const tx = db.transaction("crafts", "readwrite");
-    const store = tx.objectStore("crafts");
 
-    const craftData = {
-      title: itemName,
-      description: itemDesc,
-      steps: itemSteps,
-      image: itemImage,
-      progress: 0,
-    };
+
+
+
+  const saveCraftToIndexedDB = async (
+      itemName,
+      itemDesc,
+      itemSteps,
+      itemImage,
+      itemMat
+    ) => {
+      const db = await initDB();
+      const tx = db.transaction("crafts", "readwrite");
+      const store = tx.objectStore("crafts");
+     
+      const craftData = {
+        title: itemName,
+        description: itemDesc,
+        steps: itemSteps,
+        image: itemImage,
+        progress: 0, // starting progress
+        materials: itemMat
+      };
+      
+
+    
 
     return new Promise((resolve, reject) => {
       const request = store.add(craftData);
@@ -65,6 +74,35 @@ const CraftBox = (props) => {
     request.onerror = (e) => console.error("Delete error", e);
   };
 
+  
+
+  const checkMatUsedCollectionDB = async(matId) =>{
+    const db = await initDB()
+    const tx = db.transaction("collections", "readwrite")
+    const store = tx.objectStore("collections")
+
+    const request = store.openCursor();
+
+    request.onsuccess = (event) => {
+      const cursor = event.target.result;
+      if (cursor) {
+        const item = cursor.value;
+        if (item.name === matId) {
+          item.used = true;
+          cursor.update(item);
+          console.log("Material:", item.name);
+        }
+        cursor.continue();
+      } else {
+        console.log("Said materials marked as used");
+      }
+    };
+
+    request.onerror = (event) => {
+      console.error("Error marking materials as used", event.target.error);
+    };
+  }
+
   const toggleSave = () => {
     if (saved) {
       removeCraftFromIndexedDB();
@@ -73,10 +111,15 @@ const CraftBox = (props) => {
         props.item,
         props.description,
         props.steps,
-        props.image
+        props.image,
+        props.materials,
+        props.image,
       );
+      checkMatUsedCollectionDB(props.materials);
     }
   };
+
+  
 
   const handleCraftClick = async () => {
     if (saved) {
@@ -87,7 +130,8 @@ const CraftBox = (props) => {
           props.item,
           props.description,
           props.steps,
-          props.image
+          props.image,
+          props.materials
         );
         navigate(`/viewdetails/${newId}`);
       } catch (e) {
