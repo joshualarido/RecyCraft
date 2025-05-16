@@ -109,7 +109,7 @@ const Camera = () => {
         `;
 
         try {
-            const res = await axios.post("/gemini/text", { prompt, image });
+            const res = await axios.post(`${process.env.RAILWAY_LINK}/gemini/text`, { prompt, image });
             const reply = res.data.reply.text;
 
             let parsed;
