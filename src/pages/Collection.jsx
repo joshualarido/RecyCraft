@@ -23,7 +23,11 @@ const Collection = () => {
         console.log("delete success:", allObjs);
         const awaiting = async() =>{
           const renderedBox = await fetchBox()
-          setBox(renderedBox)
+          const renderableBox = renderedBox.map(item =>({
+            ...item,
+            image: URL.createObjectURL(item.image)
+          }))
+          setBox(renderableBox)
         }
         awaiting()
       }
@@ -76,7 +80,11 @@ const Collection = () => {
   useEffect(()=>{
     const awaiting = async() => {
       const allBox = await getBoxes();
-      setBox(allBox);
+      const renderableBox = allBox.map(item =>({
+        ...item,
+        image: URL.createObjectURL(item.image)
+      }))
+      setBox(renderableBox);
     }
     awaiting();
   },[])
