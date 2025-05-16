@@ -36,7 +36,7 @@ async function textGemini(prompt, base64Image) {
             { text: prompt },
             base64Image && {
             inlineData: {
-                mimeType: 'image/png',
+                mimeType: 'image/jpeg',
                 data: base64Image,
             },
             },

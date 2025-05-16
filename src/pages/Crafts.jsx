@@ -11,7 +11,6 @@ const Crafts = () => {
   const [loadingSuggestions, setLoadingSuggestions] = useState(true);
   const sampleImage = "https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg";
 
-
   const [otherCraftsArray, setOtherCraftsArray] = useState([]);
 
   const loadCraftsFromTempAIOther = async () => {
@@ -350,9 +349,10 @@ const Crafts = () => {
         .join("\n\n");
 
       const prompt = `
-        You are given a list of recycled crafts with their names and descriptions. Use inspiration from at least two of them to suggest **one** new craft idea.
+        You are given a list of recycled items with their names and descriptions. Use inspiration from at least two of them to suggest **one** new craft idea.
+        Mind the size of the item and how it can be used regarding the size.
 
-        Respond strictly in this JSON format:
+        Respond strictly in this text string format:
         {
           "craft": {
             "name": "string",
@@ -413,7 +413,7 @@ const Crafts = () => {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-semibold">In Progress</h1>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {crafts.map((craft) => (
             <ProgressBox
               key={craft.id}
@@ -428,26 +428,23 @@ const Crafts = () => {
       </div>
 
       <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold">Other Possible Crafts</h1>
-          <button className="text-2xl text-gray-600 hover:text-black transition" onClick={clearTempAIOther}><IoIosRefresh /></button>
-          </div>
-        <div className="grid grid-cols-4 gap-4">
-        {otherCraftsArray.length === 0 ? (
-      <p className="text-lg col-span-4">Loading...</p>
-    ) : (
-      otherCraftsArray.map((craft, index) => (
-        <CraftBox
-          key={index}
-          item={craft.title}
-          description={craft.description}
-          steps={craft.steps}
-          image={craft.image || sampleImage}
-          saved={false}
-          onSave={handleSaveCraft}
-        />
-      ))
-    )}
+        <h1 className="text-2xl font-semibold">Other Possible Crafts</h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {loadingSuggestions && suggestedCrafts.length === 0 ? (
+            <p className="text-lg col-span-4">Loading...</p>
+          ) : (
+            suggestedCrafts.map((craft, index) => (
+              <CraftBox
+                key={index}
+                item={craft.name}
+                description={craft.description}
+                steps={craft.steps}
+                image={craft.image || sampleImage}
+                saved={false}
+                onSave={handleSaveCraft}
+              />
+            ))
+          )}
         </div>
       </div>
     </div>

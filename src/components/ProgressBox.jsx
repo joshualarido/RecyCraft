@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 
 const ProgressBox = ({ id, item, image, progress, onDelete }) => {
   return (
-    <div className="card w-full bg-base-100 shadow-lg p-4">
+    <div className="card w-full max-w-sm bg-base-100 shadow-lg p-4 mx-auto">
       <div className="rounded-lg overflow-hidden mb-2">
         <img
           src={image}

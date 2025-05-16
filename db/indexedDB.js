@@ -57,7 +57,6 @@ export const initDB = () => {
         store.createIndex("steps", "steps");
         store.createIndex("description", "description");
         store.createIndex("progress", "progress");
-
       }
 
        if (!db.objectStoreNames.contains("tempAIMulti")) {
