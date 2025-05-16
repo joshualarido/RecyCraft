@@ -76,14 +76,14 @@ const Crafts = () => {
           ${formattedItems}
         `;
   
-        const res = await axios.post(`${process.env.RAILWAY_LINK}/gemini/text`, { prompt });
+        const res = await axios.post(`${import.meta.env.VITE_API_URL}/gemini/text`, { prompt });
         const reply = res.data.reply.text.trim();
         const parsed = JSON.parse(reply);
   
         // Generate image
         const imagePrompt = `Generate an image for a recycled craft project called "${parsed.name}". It is described as: ${parsed.description}`;
         try {
-          const imageRes = await axios.post(`${process.env.RAILWAY_LINK}/gemini/image`, { prompt: imagePrompt });
+          const imageRes = await axios.post(`${import.meta.env.VITE_API_URL}/gemini/image`, { prompt: imagePrompt });
           const imageReply = imageRes.data.reply;
           parsed.image = `data:${imageReply.mimeType};base64,${imageReply.image}`;
         } catch {
@@ -371,7 +371,7 @@ const Crafts = () => {
       `;
 
       try {
-        const res = await axios.post(`${process.env.RAILWAY_LINK}/gemini/text`, { prompt });
+        const res = await axios.post(`${import.meta.env.VITE_API_URL}/gemini/text`, { prompt });
         const reply = res.data.reply.text.trim();
         const parsed = JSON.parse(reply);
         const craft = parsed.craft;
@@ -379,7 +379,7 @@ const Crafts = () => {
         // Generate image
         const imagePrompt = `Generate an image for a recycled craft project called "${craft.name}". It is described as: ${craft.description}`;
         try {
-          const imageRes = await axios.post(`${process.env.RAILWAY_LINK}/gemini/image`, {
+          const imageRes = await axios.post(`${import.meta.env.VITE_API_URL}/gemini/image`, {
             prompt: imagePrompt,
           });
           const imageReply = imageRes.data.reply;
