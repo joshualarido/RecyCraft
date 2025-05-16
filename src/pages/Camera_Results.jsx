@@ -235,6 +235,7 @@ const Camera_Results = () => {
     try {
       const res = await axios.post(`${import.meta.env.VITE_API_URL}/gemini/text`, { prompt, image });
       const reply = res.data.reply.text;
+      console.log(`${import.meta.env.VITE_API_URL}/gemini/text`);
 
       // Attempt to parse the AI's response as JSON
       let parsed;
