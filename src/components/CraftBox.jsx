@@ -141,7 +141,7 @@ const CraftBox = (props) => {
   };
 
   return (
-    <div className="card w-full bg-base-100 shadow-lg p-4 max-w-72">
+    <div className="card w-full max-w-sm bg-base-100 shadow-lg p-4 mx-auto">
       <div className="rounded-lg overflow-hidden mb-2">
         <img
           src={props.image}
