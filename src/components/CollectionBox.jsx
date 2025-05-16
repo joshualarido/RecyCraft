@@ -6,7 +6,7 @@ const CollectionBox = ( props ) => {
   };
 
   return (
-    <div className="card w-full bg-base-100 shadow-lg p-4">
+    <div className="card w-full max-w-sm bg-base-100 shadow-lg p-4 mx-auto">
       <div className="rounded-lg overflow-hidden mb-2">
         <img
           src={props.image}
@@ -22,8 +22,6 @@ const CollectionBox = ( props ) => {
             <FaRegTrashCan className="text-lg transition-colors cursor-pointer" />
           </button>
         </div>
-
-        <p className="text-sm text-gray-600 mb-4">{props.description}</p>
       </div>
 
       {props.used ? (

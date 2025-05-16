@@ -104,14 +104,13 @@ const Collection = () => {
   return (
     <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-semibold">All items</h1>
-      <div className="grid grid-cols-4 gap-4" >
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {sortedItems
         .map((item, index) => (
           <CollectionBox
             key={index}
             name={item.name}
             image={item.image}
-            description={item.description}
             used={item.used}
             onDelete={deleteItem} 
           />

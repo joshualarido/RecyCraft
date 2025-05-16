@@ -185,9 +185,10 @@ const Crafts = () => {
         .join("\n\n");
 
       const prompt = `
-        You are given a list of recycled crafts with their names and descriptions. Use inspiration from at least two of them to suggest **one** new craft idea.
+        You are given a list of recycled items with their names and descriptions. Use inspiration from at least two of them to suggest **one** new craft idea.
+        Mind the size of the item and how it can be used regarding the size.
 
-        Respond strictly in this JSON format:
+        Respond strictly in this text string format:
         {
           "craft": {
             "name": "string",
@@ -247,7 +248,7 @@ const Crafts = () => {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-semibold">In Progress</h1>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {crafts.map((craft) => (
             <ProgressBox
               key={craft.id}

@@ -221,7 +221,7 @@ const Camera_Results = () => {
 
       {
         "name": "string",                // The name of the item detected
-        "description": "string",         // A concise 3-sentence description of the item, ignoring the environment of the item. describe it straightforwardly skipping buzzwords and start with an immediate "A/An...", no saying what is "visible", just say it how it is and describe the image instead of trying to tell someone what you see. Avoid pronoun usage.
+        "description": "string",         // A detailed description of the item, 5-6 sentences, imagine the user isn't able to see the image and you need to describe it to a blind man. ignoring the environment of the item. describe it straightforwardly skipping buzzwords and start with an immediate "A/An...", no saying what is "visible", just say it how it is and describe the image instead of trying to tell someone what you see. Avoid pronoun usage. Include a size estimate in the description as well, match it with the next attribute. (L x W x H, e.g., "30cm x 20cm x 10cm")
         "size_estimate": "string",       // Estimate the size in the format L x W x H, e.g., "30cm x 20cm x 10cm"
         "recyclable": true | false       // Use a boolean: true if it can be reused/recycled, false if not. Recyclable is defined by the ability to make something new from the current item being parsed. avoid marking true if the item is organic, looks expensive, or looks like absolute junk that has barely any uses and cannot be made into much stuff.
       }
@@ -280,8 +280,10 @@ const Camera_Results = () => {
   };
 
   const createSuggestion = async (image) => {
+    const blockedCraftNames = craftsArray.map(craft => craft.title);
+
     const prompt = `
-      You are to analyze an image of an object and return one of several possible recyclable ideas made out of it.
+      You are to analyze an array of recyclable materials and return one of several possible recyclable ideas made out of it, including the individual parts of the object you can separate from the main object. You are not needed to use to whole object, but you can use only a part of the object given.
       Think creatively and provide new ideas. Avoid repeating suggestions.
 
       Strictly follow this format below. Do not include any commentary or explanation, only the string text block with no other formatting in this template:
@@ -299,6 +301,7 @@ const Camera_Results = () => {
 
       Do NOT use triple backticks or any Markdown formatting.
       It must be reiterated that the start of the output should NOT start or end with \`\`\` either.
+      Dont create the things that are already listed in this list of names, and ones that serve the same function: ${JSON.stringify(blockedCraftNames)}.
     `;
 
     try {
@@ -500,9 +503,14 @@ const Camera_Results = () => {
     });
   };
 
-  const createMultiSuggestion = async (nameArray) => {
+
+
+
+  const createMultiSuggestion = async(nameArray) =>{
+    const blockedMultiCraftNames = multiCraftsArray.map(craft => craft.title);
+
     const prompt = `
-      You are to analyze an array of recyclable materials and return one of several possible recyclable ideas made out of it.
+      You are to analyze an array of recyclable materials and return one of several possible recyclable ideas made out of it, including the individual parts of the object you can separate from the main object. You are not needed to use to whole object, but you can use only a part of the object given.
       Think creatively and provide new ideas. Avoid repeating suggestions. 
 
       Use only the items in this list:
@@ -523,6 +531,7 @@ const Camera_Results = () => {
 
       Do NOT use triple backticks or any Markdown formatting.
       It must be reiterated that the start of the output should NOT start or end with \`\`\` either.
+      Dont create the things that are already listed in this list of names: ${JSON.stringify(blockedMultiCraftNames)}.
     `;
 
     try {
@@ -654,9 +663,9 @@ const Camera_Results = () => {
           <div className="flex flex-row justify-start gap-4">
             {itemDetails ? (
               itemDetails.recyclable ? (
-                craftsArray.length > 0 && itemDetails ? (
+                craftsArray.length > 0 ? (
                   craftsArray.map((craft, index) => (
-                    <CraftBox
+                    <div
                       key={index}
                       craft={craft}
                       item={craft.title}
@@ -692,7 +701,7 @@ const Camera_Results = () => {
               <IoIosRefresh />
             </button>
           </div>
-          <div className="flex justify-start gap-4">
+          <div className="flex flex-wrap gap-4">
             {itemDetails ? (
               itemDetails.recyclable ? (
                 multiCraftsArray.length > 0 && itemDetails ? (
