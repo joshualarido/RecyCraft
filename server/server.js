@@ -13,7 +13,13 @@ if (process.env.KEY_JSON_BASE64) {
 }
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'https://recycraft-frontend.vercel.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true,
+}));
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
