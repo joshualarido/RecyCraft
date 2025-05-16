@@ -26,5 +26,4 @@ dist-ssr
 # custom
 node_modules/
 server/.env
-server/key.json
 .env

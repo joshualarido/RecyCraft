@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "gen-lang-client-0397282198",
+  "private_key_id": "8310c9a58dc2e8f496a5a223978c9112dc27b7a0",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDTg89Zev8RwhQD\n91iX+yfLmVB9s5mT6SUSsZBbcQ6nLTdjtml89Nv7lN94W+CRxb7wiaxodpIzijK0\ngFvYrh2igfpAcaS51tdbfr6D0PRNO6Css7Jmw8HSbhipor0AScjFjfGz0Ot6QDZU\ncxz/qjArouZlDzWtoskaukWWZKAvyacEPnGVJenV3d3uRrRUrrHVuzNxCnilTlkG\navhq+AF4fT4EtF8Ll+Yn+ZiElPGViasisgOYOFEsfo9/PVPYMzQ0g1KWUDlUNmHc\nK6Tu6xpO0R4tUFwE9PoLzBvoz3gtoyQ+txYo3UKO1EsllL6FExXehjIoisDJG2hg\nrWahiZKvAgMBAAECggEAOZ7fVjuNEAvkgv4XevO3MB5YkJ3kOSia6mBH+LkwajeF\nrtrLGvjjksJILJQu9dc+gG2o855VjsfXr1eGbd1lAlfRUkwDOYM/ENRS1zsNyppz\nV4jukVND0m0et9u3DESNdtAH59oCxD+I7XGclUOKMuECTcaac250xZy4B1PrVYjl\nYm1g4SyXLy3DGOMaDOQo0+XhlmCPYYDuEmg5+0oug2jxG7nA+deZ0BrD9ZQDMxQA\nS96CIZdBY47sUhjO153W7y9LD1iY5BykjLY8nt4oCKUefHi0BAyoL4x3/a7Bfi/w\nHku6Ca0xTx25Zi4zXrrywBeE3kg+epq88rMxBRrUZQKBgQDxR33sjI7JhuA9fh/t\nbyLCopd4gjoVxwHru1ZiiUaZsBS9qU5roeTZQhrmnQ08h97uTUwtsI2IuSMeTz1H\n8/WGjtVYTIHCW7W0i+7tfPMIzbBiMPnKrimyjGBE8V1gnlIWkmeh6JTwf2mz4XFW\nydXe7OP3AhzawZuxPd4PFGR6ewKBgQDga26lrOSx1Jgsw4s2/5ydVLJjbQXquLnh\nzKSFbW4+pKXHTbph+Md+1tlH9NKcHAnxVmEVC4QceOM2RMEBmOil0zAmbb6o6tgm\nOKjtfLKehCiKPEl70Ax3xEvKqV+0/rAjOnJ6tHtaXX3Ih2aYwACTWbr+tQy/o5UH\niQQKo+j8XQKBgFu4Ep1mfS0MsZeOp3Jpyev1ROFRl+UJZqiG6XrBtm3b6raCcsYl\nn8obAADkeNCm0c8C4U+JCvSLdFckRiZhDded2mobg0Qv+q3sd+IdmoGhN0jMV1h9\nxmoSRNJQcm+1H31nIDADKwMVXEg+Dgiw5zU8Fhii2/conBfPbeeLl/qbAoGAcSc5\n/ucR2Ggs4kUmKHDxcpKF74PE+/hwIN2iBnSKpaM2wyr50vQxAk8p9xIGLxgkGz9G\na+oGjqSVS4OXHUsP4qx9FqM3AsyGd58R7cx1818HYcvL8VWRM8IRxPlpfET+YoTR\nu/TMTV/eUAGVRWdp4uHXWx3Gc8nzFn2LQCItEzECgYEAjTdRcxF2bu9fLY4n8ZOs\ntbBgA1P86I2CpDfig6mV8hR06WwMOA6NnaMiLUy8jII1hlKWnnAu09QlOouZITnW\nS+yzOcyNZj7tml4ZRMXlBk8+S4KK0GQTCChIVgV2xHuajPvjjpgdciYyy8qXDGxS\nU6qq8HY9M6Fj0kUg78mioQ0=\n-----END PRIVATE KEY-----\n",
+  "client_email": "recycraft-gemini-service@gen-lang-client-0397282198.iam.gserviceaccount.com",
+  "client_id": "103611430557079090536",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/recycraft-gemini-service%40gen-lang-client-0397282198.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
