@@ -305,7 +305,7 @@ const Crafts = () => {
     }
   };
 
-  //Retrieve Collections from idb 
+  //Retrieve Collections from idb
   const loadCollectionsFromIndexedDB = async () => {
     try {
       const db = await initDB();
@@ -335,8 +335,8 @@ const Crafts = () => {
     }
   };
 
-    //Generate Text + Image
-    const createSuggestions = async (collections) => {
+  //Generate Text + Image
+  const createSuggestions = async (collections) => {
     setSuggestedCrafts([]); // clear previous
     setLoadingSuggestions(true); // show loading state
 
@@ -344,7 +344,9 @@ const Crafts = () => {
       const formattedItems = collections
         .map(
           (item, idx) =>
-            `Item ${idx + 1}:\nName: ${item.name}\nDescription: ${item.description}`
+            `Item ${idx + 1}:\nName: ${item.name}\nDescription: ${
+              item.description
+            }`
         )
         .join("\n\n");
 
@@ -377,7 +379,9 @@ const Crafts = () => {
         // Generate image
         const imagePrompt = `Generate an image for a recycled craft project called "${craft.name}". It is described as: ${craft.description}`;
         try {
-          const imageRes = await axios.post("/gemini/image", { prompt: imagePrompt });
+          const imageRes = await axios.post("/gemini/image", {
+            prompt: imagePrompt,
+          });
           const imageReply = imageRes.data.reply;
           craft.image = `data:${imageReply.mimeType};base64,${imageReply.image}`;
         } catch {
@@ -386,7 +390,6 @@ const Crafts = () => {
 
         // Render each immediately
         setSuggestedCrafts((prev) => [...prev, craft]);
-
       } catch (error) {
         console.error("Failed to generate suggestion:", error);
       }
@@ -395,14 +398,8 @@ const Crafts = () => {
     setLoadingSuggestions(false); // all done
   };
 
-
-
   useEffect(() => {
     const load = async () => {
-      //Remove this 2
-      /* await addSampleCraftToIndexedDB();
-      await addSampleCollectionsToIndexedDB(); */
-
       await loadCraftsFromIndexedDB();
       await loadCollectionsFromIndexedDB();
     };
@@ -419,7 +416,7 @@ const Crafts = () => {
               key={craft.id}
               id={craft.id}
               item={craft.title}
-              image={craft.image}
+              image={craft.image || sampleImage}
               progress={craft.progress}
               onDelete={handleDeleteCraft}
             />
@@ -428,26 +425,51 @@ const Crafts = () => {
       </div>
 
       <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold">Other Possible Crafts</h1>
-          <button className="text-2xl text-gray-600 hover:text-black transition" onClick={clearTempAIOther}><IoIosRefresh /></button>
-          </div>
-        <div className="grid grid-cols-4 gap-4">
-        {otherCraftsArray.length === 0 ? (
-      <p className="text-lg col-span-4">Loading...</p>
-    ) : (
-      otherCraftsArray.map((craft, index) => (
-        <CraftBox
-          key={index}
-          item={craft.title}
-          description={craft.description}
-          steps={craft.steps}
-          image={craft.image || sampleImage}
-          saved={false}
-          onSave={handleSaveCraft}
-        />
-      ))
-    )}
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-semibold">Other Possible Crafts</h1>
+          {loadingSuggestions ? (
+            <div className="flex items-center gap-2">
+              <span className="text-gray-600 text-base">
+                Generating more ideas...
+              </span>
+              <div className="w-5 h-5 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <button className="text-2xl text-gray-600 hover:text-black transition" onClick={clearTempAIOther}><IoIosRefresh /></button>
+          )}
+//       <div className="flex items-center gap-3">
+//           <h1 className="text-2xl font-bold">Other Possible Crafts</h1>
+//           <button className="text-2xl text-gray-600 hover:text-black transition" onClick={clearTempAIOther}><IoIosRefresh /></button>
+//           </div>
+//         <div className="grid grid-cols-4 gap-4">
+//         {otherCraftsArray.length === 0 ? (
+//       <p className="text-lg col-span-4">Loading...</p>
+//     ) : (
+//       otherCraftsArray.map((craft, index) => (
+//         <CraftBox
+//           key={index}
+//           item={craft.title}
+//           description={craft.description}
+//           steps={craft.steps}
+//           image={craft.image || sampleImage}
+//           saved={false}
+//           onSave={handleSaveCraft}
+//         />
+//       ))
+//     )}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {suggestedCrafts.map((craft, index) => (
+            <CraftBox
+              key={index}
+              item={craft.name}
+              description={craft.description}
+              steps={craft.steps}
+              image={craft.image || sampleImage}
+              saved={false}
+              onSave={handleSaveCraft}
+            />
+          ))}
         </div>
       </div>
     </div>

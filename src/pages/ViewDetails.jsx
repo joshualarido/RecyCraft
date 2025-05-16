@@ -8,7 +8,7 @@ import BigProgressBar from "../components/BigProgressBar";
 
 const ViewDetails = () => {
   const { id } = useParams();
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const [craft, setCraft] = useState(null);
   const [loading, setLoading] = useState(true);
   const [stepProgress, setStepProgress] = useState(0);
@@ -60,6 +60,7 @@ const ViewDetails = () => {
 
         request.onsuccess = () => {
           const result = request.result;
+
           setCraft(result);
 
           let stepsLength = 0;
@@ -109,7 +110,7 @@ const ViewDetails = () => {
         <CraftCard
           CraftName={craft.title}
           CraftDescription={craft.description}
-          CraftUses={craft.materials}
+          CraftMaterials={craft.materials}
         />
       </div>
       <div className="flex flex-col gap-4 w-full">

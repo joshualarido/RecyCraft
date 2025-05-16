@@ -133,6 +133,7 @@ const CraftBox = (props) => {
           props.image,
           props.materials
         );
+        checkMatUsedCollectionDB(props.materials);
         navigate(`/viewdetails/${newId}`);
       } catch (e) {
         console.error("Failed to auto-save before navigating:", e);
