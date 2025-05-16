@@ -233,9 +233,9 @@ const Camera_Results = () => {
       It must be reiterated that the start of the output should NOT start with \`\`\`JSON or end with \`\`\` either.
       `;
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/gemini/text`, { prompt, image });
+      const res = await axios.post(`https://${import.meta.env.VITE_API_URL}/gemini/text`, { prompt, image });
       const reply = res.data.reply.text;
-      console.log(`${import.meta.env.VITE_API_URL}/gemini/text`);
+      console.log(`https://${import.meta.env.VITE_API_URL}/gemini/text`);
 
       // Attempt to parse the AI's response as JSON
       let parsed;
@@ -311,7 +311,7 @@ const Camera_Results = () => {
     `;
 
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/gemini/text`, { prompt, image });
+      const res = await axios.post(`https://${import.meta.env.VITE_API_URL}/gemini/text`, { prompt, image });
 
       const reply = res.data.reply.text;
 
@@ -396,7 +396,7 @@ const Camera_Results = () => {
     `;
 
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/gemini/image`, { prompt });
+      const res = await axios.post(`https://${import.meta.env.VITE_API_URL}/gemini/image`, { prompt });
       const reply = res.data.reply;
 
       const imageSrc = base64ToImageSrc(reply.image, reply.mimeType);
@@ -536,7 +536,7 @@ const Camera_Results = () => {
     `;
 
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/gemini/text`, { prompt });
+      const res = await axios.post(`https://${import.meta.env.VITE_API_URL}/gemini/text`, { prompt });
       const reply = res.data.reply.text;
 
       let parsed;
