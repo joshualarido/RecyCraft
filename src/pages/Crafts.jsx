@@ -3,7 +3,7 @@ import CraftBox from "../components/CraftBox";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { initDB } from "../../db/indexedDB";
-
+import { IoIosRefresh } from "react-icons/io";
 const Crafts = () => {
   const [generatedImage, setGeneratedImage] = useState(null);
   const [crafts, setCrafts] = useState([]);
@@ -11,7 +11,174 @@ const Crafts = () => {
   const [loadingSuggestions, setLoadingSuggestions] = useState(true);
   const sampleImage = "https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg";
 
-  //Just sample, remove after other's finished
+
+  const [otherCraftsArray, setOtherCraftsArray] = useState([]);
+
+  const loadCraftsFromTempAIOther = async () => {
+    try {
+      const db = await initDB();
+      const tx = db.transaction("tempAIOther", "readonly");
+      const store = tx.objectStore("tempAIOther");
+  
+      const request = store.getAll();
+      request.onsuccess = () => {
+        setOtherCraftsArray(request.result);
+      };
+    } catch (err) {
+      console.error("Failed to load tempAIOther crafts:", err);
+    }
+  };
+  useEffect(() => {
+    const load = async () => {
+      await loadCraftsFromIndexedDB();
+      await loadCollectionsFromIndexedDB();
+      await loadCraftsFromTempAIOther(); // Add this
+
+      await generateInitialOtherSuggestions();
+    };
+    load();
+  }, []);
+
+  const createOtherSuggestion = async (collections) => {
+    try {
+      const db = await initDB();
+      const txCheck = db.transaction("tempAIOther", "readonly");
+      const storeCheck = txCheck.objectStore("tempAIOther");
+      const countRequest = storeCheck.count();
+  
+      countRequest.onsuccess = async () => {
+        if (countRequest.result >= 4) {
+          console.log("Reached 4 suggestions. Skipping creation.");
+          return;
+        }
+  
+        const formattedItems = collections
+          .map((item, idx) =>
+            `Item ${idx + 1}:\nName: ${item.name}\nDescription: ${item.description}`
+          )
+          .join("\n\n");
+  
+        const prompt = `
+          You are given a list of recycled crafts with their names and descriptions. 
+          Use inspiration from at least two of them to suggest **one new craft idea**.
+  
+          Respond strictly in this JSON format:
+          {
+            "name": "string",
+            "description": "string",
+            "steps": ["string", "string", "string"],
+            "image": ""
+          }
+  
+          Do NOT use triple backticks or any Markdown formatting.
+          It must be reiterated that the start of the output should NOT start with \`\`\`JSON or end with \`\`\` either.
+  
+          Here are the crafts:
+          ${formattedItems}
+        `;
+  
+        const res = await axios.post("/gemini/text", { prompt });
+        const reply = res.data.reply.text.trim();
+        const parsed = JSON.parse(reply);
+  
+        // Generate image
+        const imagePrompt = `Generate an image for a recycled craft project called "${parsed.name}". It is described as: ${parsed.description}`;
+        try {
+          const imageRes = await axios.post("/gemini/image", { prompt: imagePrompt });
+          const imageReply = imageRes.data.reply;
+          parsed.image = `data:${imageReply.mimeType};base64,${imageReply.image}`;
+        } catch {
+          parsed.image = sampleImage;
+        }
+  
+        const tx = db.transaction("tempAIOther", "readwrite");
+        const store = tx.objectStore("tempAIOther");
+  
+        const request = store.add({
+          title: parsed.name,
+          description: parsed.description,
+          image: parsed.image,
+          steps: parsed.steps,
+          materials: parsed.name,
+          progress: 0,
+        });
+  
+        request.onsuccess = () => {
+          console.log("Saved generated craft to tempAIOther");
+          loadCraftsFromTempAIOther();
+        };
+      };
+  
+      countRequest.onerror = () => {
+        console.error("Error checking tempAIOther count");
+      };
+    } catch (error) {
+      console.error("Failed to generate suggestion:", error);
+    }
+  };
+  
+
+  const generateInitialOtherSuggestions = async () => {
+    try {
+      const db = await initDB();
+      const tx = db.transaction("tempAIOther", "readonly");
+      const store = tx.objectStore("tempAIOther");
+  
+      const getAllRequest = store.getAll();
+      getAllRequest.onsuccess = async () => {
+        const existing = getAllRequest.result;
+        const remaining = 4 - existing.length;
+  
+        if (remaining <= 0) {
+          console.log("Already have 4 other suggestions. Skipping.");
+          return;
+        }
+  
+        const collections = await loadCollectionsForSuggestions(); // see next step
+        for (let i = 0; i < remaining; i++) {
+          await createOtherSuggestion(collections);
+        }
+      };
+    } catch (err) {
+      console.error("Error generating batch:", err);
+    }
+  };
+
+  const loadCollectionsForSuggestions = async () => {
+    try {
+      const db = await initDB();
+      const tx = db.transaction("collections", "readonly");
+      const store = tx.objectStore("collections");
+  
+      return new Promise((resolve, reject) => {
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = reject;
+      });
+    } catch (err) {
+      console.error("Failed to load collections:", err);
+      return [];
+    }
+  };
+
+  const clearTempAIOther = async () => {
+    try {
+      const db = await initDB();
+      const tx = db.transaction("tempAIOther", "readwrite");
+      const store = tx.objectStore("tempAIOther");
+  
+      const clearRequest = store.clear();
+      clearRequest.onsuccess = () => {
+        console.log("Cleared tempAIOther store");
+        setOtherCraftsArray([]); // Reset UI
+        generateInitialOtherSuggestions(); // Regenerate
+      };
+    } catch (err) {
+      console.error("Failed to clear tempAIOther:", err);
+    }
+  };
+
+  //Remove (addSampleCraftToIndexedDB + addSampleCollectionsToIndexedDB) after everything finishes
   const addSampleCraftToIndexedDB = async () => {
     try {
       const db = await initDB();
@@ -35,7 +202,6 @@ const Crafts = () => {
     }
   };
 
-  //Remove me
   const addSampleCollectionsToIndexedDB = async () => {
     try {
       const db = await initDB();
@@ -87,19 +253,7 @@ const Crafts = () => {
     }
   };
 
-  //Generate Text (Not Needed Anymore)
-  const callGemini = async (prompt) => {
-    try {
-      const res = await axios.post("/gemini/text", { prompt });
-      const reply = res.data.reply;
-      const imageUrl = `data:${reply.mimeType};base64,${reply.image}`;
-      setGeneratedImage(imageUrl);
-    } catch (error) {
-      console.error("Error calling Gemini API:", error);
-    }
-  };
-
-  //Handle Delete Button on ProgressBox
+  //Handle delete button on progressBox
   const handleDeleteCraft = async (id) => {
     try {
       const db = await initDB();
@@ -119,11 +273,12 @@ const Crafts = () => {
     }
   };
 
+  //Handle save button on craftBox
   const handleSaveCraft = (newCraft) => {
     setCrafts((prev) => [...prev, newCraft]);
   };
 
-  //Retrieve In Progress Data From IDB Craft
+  //Retrieve craft data from IDB
   const loadCraftsFromIndexedDB = async () => {
     try {
       const db = await initDB();
@@ -151,7 +306,7 @@ const Crafts = () => {
     }
   };
 
-  //Retrieve Collections from idb to send it into CreateSuggestion
+  //Retrieve Collections from idb 
   const loadCollectionsFromIndexedDB = async () => {
     try {
       const db = await initDB();
@@ -181,123 +336,37 @@ const Crafts = () => {
     }
   };
 
-  //Generate Craft (Text)
-  const createSuggestion = async (collections) => {
-    const formattedItems = collections
-      .map(
-        (item, idx) => `Item ${idx + 1}:
-Name: ${item.name}
-Description: ${item.description}`
-      )
-      .join("\n\n");
-
-    const prompt = `
-You are given a list of recycled crafts with their titles and descriptions. Using inspiration from more than two of them at a time, suggest four **new** craft ideas that creatively combine their **themes, materials, or purposes**.
-
-Here are the existing items:
-${formattedItems}
-
-Return your suggestions strictly in this JSON format (no extra text):
-
-{
-  "crafts": [
-    {
-      "name": "string",
-      "description": "string",
-      "steps": [
-        "string",
-        "string",
-        "string",
-        "string"
-      ]
-    },
-    {
-      "name": "string",
-      "description": "string",
-      "steps": [
-        "string",
-        "string",
-        "string",
-        "string"
-      ]
-    },
-    {
-      "name": "string",
-      "description": "string",
-      "steps": [
-        "string",
-        "string",
-        "string",
-        "string"
-      ]
-    },
-    {
-      "name": "string",
-      "description": "string",
-      "steps": [
-        "string",
-        "string",
-        "string",
-        "string"
-      ]
-    }
-  ]
-}
-
-  Do NOT use triple backticks or any Markdown formatting.
-  It must be reiterated that the start of the output should NOT start with \`\`\`JSON or end with \`\`\` either.
-`;
-
-    try {
-      const res = await axios.post("/gemini/text", { prompt });
-      const reply = res.data.reply.text;
-
-      try {
-        const parsed = JSON.parse(reply);
-        await generateImagesForSuggestions(parsed.crafts);
-      } catch (jsonError) {
-        console.error("Failed to parse Gemini reply as JSON:", jsonError);
-        console.log("Raw reply from Gemini:", reply);
-      }
-    } catch (error) {
-      console.error("Error calling Gemini API:", error);
-    }
-  };
-
-  //testing this shit
-  const createSuggestions = async (collections) => {
-    setLoadingSuggestions(true);
-
-    const suggestions = [];
+    //Generate Text + Image
+    const createSuggestions = async (collections) => {
+    setSuggestedCrafts([]); // clear previous
+    setLoadingSuggestions(true); // show loading state
 
     for (let i = 0; i < 4; i++) {
       const formattedItems = collections
         .map(
           (item, idx) =>
-            `Item ${idx + 1}:\nName: ${item.name}\nDescription: ${
-              item.description
-            }`
+            `Item ${idx + 1}:\nName: ${item.name}\nDescription: ${item.description}`
         )
         .join("\n\n");
 
       const prompt = `
-You are given a list of recycled crafts with their names and descriptions. Use inspiration from at least two of them to suggest **one** new craft idea.
+        You are given a list of recycled crafts with their names and descriptions. Use inspiration from at least two of them to suggest **one** new craft idea.
 
-Respond strictly in this JSON format:
+        Respond strictly in this JSON format:
+        {
+          "craft": {
+            "name": "string",
+            "description": "string",
+            "steps": ["string", "string", "string", "string"]
+          }
+        }
 
-{
-  "craft": {
-    "name": "string",
-    "description": "string",
-    "steps": ["string", "string", "string", "string"]
-  }
-}
+        Do NOT use triple backticks or any Markdown formatting.
+        It must be reiterated that the start of the output should NOT start with \`\`\`JSON or end with \`\`\` either.
 
-  Do NOT use triple backticks or any Markdown formatting.
-  It must be reiterated that the start of the output should NOT start with \`\`\`JSON or end with \`\`\` either.
-Here are the crafts:
-${formattedItems}
-`; // your updated prompt above
+        Here are the crafts:
+        ${formattedItems}
+      `;
 
       try {
         const res = await axios.post("/gemini/text", { prompt });
@@ -305,49 +374,28 @@ ${formattedItems}
         const parsed = JSON.parse(reply);
         const craft = parsed.craft;
 
-        // Generate image for each individual suggestion
+        // Generate image
         const imagePrompt = `Generate an image for a recycled craft project called "${craft.name}". It is described as: ${craft.description}`;
         try {
-          const imageRes = await axios.post("/gemini/image", {
-            prompt: imagePrompt,
-          });
+          const imageRes = await axios.post("/gemini/image", { prompt: imagePrompt });
           const imageReply = imageRes.data.reply;
-          const imageUrl = `data:${imageReply.mimeType};base64,${imageReply.image}`;
-          craft.image = imageUrl;
+          craft.image = `data:${imageReply.mimeType};base64,${imageReply.image}`;
         } catch {
           craft.image = sampleImage;
         }
 
-        suggestions.push(craft);
-        setSuggestedCrafts([...suggestions]); // Update as each craft is added
+        // Render each immediately
+        setSuggestedCrafts((prev) => [...prev, craft]);
+
       } catch (error) {
         console.error("Failed to generate suggestion:", error);
       }
     }
 
-    setLoadingSuggestions(false);
+    setLoadingSuggestions(false); // all done
   };
 
-  //Genearte Craft (Image) from (handleDeleteCraft)
-  const generateImagesForSuggestions = async (crafts) => {
-    setLoadingSuggestions(true);
-    const craftsWithImages = await Promise.all(
-      crafts.map(async (craft) => {
-        const prompt = `Generate an image for a recycled craft project called "${craft.name}". It is described as: ${craft.description}`;
-        try {
-          const res = await axios.post("/gemini/image", { prompt });
-          const reply = res.data.reply;
-          const imageUrl = `data:${reply.mimeType};base64,${reply.image}`;
-          return { ...craft, image: imageUrl };
-        } catch (error) {
-          console.error("Failed to generate image for:", craft.name, error);
-          return { ...craft, image: sampleImage };
-        }
-      })
-    );
-    setSuggestedCrafts(craftsWithImages);
-    setLoadingSuggestions(false);
-  };
+
 
   useEffect(() => {
     const load = async () => {
@@ -380,23 +428,26 @@ ${formattedItems}
       </div>
 
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold">Other Possible Crafts</h1>
+      <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold">Other Possible Crafts</h1>
+          <button className="text-2xl text-gray-600 hover:text-black transition" onClick={clearTempAIOther}><IoIosRefresh /></button>
+          </div>
         <div className="grid grid-cols-4 gap-4">
-          {loadingSuggestions ? (
-            <p className="text-lg col-span-4">Loading...</p>
-          ) : (
-            suggestedCrafts.map((craft, index) => (
-              <CraftBox
-                key={index}
-                item={craft.name}
-                description={craft.description}
-                steps={craft.steps}
-                image={craft.image || sampleImage}
-                saved={false}
-                onSave={handleSaveCraft}
-              />
-            ))
-          )}
+        {otherCraftsArray.length === 0 ? (
+      <p className="text-lg col-span-4">Loading...</p>
+    ) : (
+      otherCraftsArray.map((craft, index) => (
+        <CraftBox
+          key={index}
+          item={craft.title}
+          description={craft.description}
+          steps={craft.steps}
+          image={craft.image || sampleImage}
+          saved={false}
+          onSave={handleSaveCraft}
+        />
+      ))
+    )}
         </div>
       </div>
     </div>
