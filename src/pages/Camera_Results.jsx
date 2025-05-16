@@ -16,9 +16,11 @@ const Camera_Results = () => {
     useState(false);
   const [objectDetected, setObjectDetected] = useState(false);
   const [isLoadingSimpleSuggestions, setIsLoadingSimpleSuggestions] =
-    useState(true); // or false initially
+    useState(true);
+  const [isLoadingMultifacet, setIsLoadingMultifacet] = useState(true);
   // const [genImageBase64, setGenImageBase64] = useState(null);  // this state isn't used anywhere
   const [genImageSrc, setGenImageSrc] = useState(null);
+  const sampleImage = "https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg";
 
   useEffect(() => {
     loadImage();
@@ -280,7 +282,7 @@ const Camera_Results = () => {
   };
 
   const createSuggestion = async (image) => {
-    const blockedCraftNames = craftsArray.map(craft => craft.title);
+    const blockedCraftNames = craftsArray.map((craft) => craft.title);
 
     const prompt = `
       You are to analyze an array of recyclable materials and return one of several possible recyclable ideas made out of it, including the individual parts of the object you can separate from the main object. You are not needed to use to whole object, but you can use only a part of the object given.
@@ -301,7 +303,9 @@ const Camera_Results = () => {
 
       Do NOT use triple backticks or any Markdown formatting.
       It must be reiterated that the start of the output should NOT start or end with \`\`\` either.
-      Dont create the things that are already listed in this list of names, and ones that serve the same function: ${JSON.stringify(blockedCraftNames)}.
+      Dont create the things that are already listed in this list of names, and ones that serve the same function: ${JSON.stringify(
+        blockedCraftNames
+      )}.
     `;
 
     try {
@@ -349,6 +353,7 @@ const Camera_Results = () => {
     }
   };
 
+  //1
   const generateInitialSuggestions = async () => {
     setIsLoadingSimpleSuggestions(true);
     const db = await initDB();
@@ -363,7 +368,6 @@ const Camera_Results = () => {
 
       if (remaining <= 0) {
         console.log("Already have 4 suggestions. Skipping generation.");
-        await loadCraftsFromTempAI();
         setIsLoadingSimpleSuggestions(false);
         return;
       }
@@ -374,17 +378,11 @@ const Camera_Results = () => {
 
       await loadCraftsFromTempAI();
       setIsLoadingSimpleSuggestions(false);
-
-      getAllRequest.onerror = (e) => {
-        console.error("Failed to count existing suggestions:", e);
-        setIsLoadingSimpleSuggestions(false); 
-      };
-
-      await loadCraftsFromTempAI();
     };
 
     getAllRequest.onerror = (e) => {
       console.error("Failed to count existing suggestions:", e);
+      setIsLoadingSimpleSuggestions(false);
     };
   };
 
@@ -415,7 +413,9 @@ const Camera_Results = () => {
 
   // --------------------------------------------------------------------------------------------------------------------------------------
 
+  //2
   const generateInitialMultiSuggestions = async () => {
+    setIsLoadingMultifacet(true);
     const db = await initDB();
     const tx = db.transaction("tempAIMulti", "readonly");
     const store = tx.objectStore("tempAIMulti");
@@ -503,11 +503,8 @@ const Camera_Results = () => {
     });
   };
 
-
-
-
-  const createMultiSuggestion = async(nameArray) =>{
-    const blockedMultiCraftNames = multiCraftsArray.map(craft => craft.title);
+  const createMultiSuggestion = async (nameArray) => {
+    const blockedMultiCraftNames = multiCraftsArray.map((craft) => craft.title);
 
     const prompt = `
       You are to analyze an array of recyclable materials and return one of several possible recyclable ideas made out of it, including the individual parts of the object you can separate from the main object. You are not needed to use to whole object, but you can use only a part of the object given.
@@ -531,7 +528,9 @@ const Camera_Results = () => {
 
       Do NOT use triple backticks or any Markdown formatting.
       It must be reiterated that the start of the output should NOT start or end with \`\`\` either.
-      Dont create the things that are already listed in this list of names: ${JSON.stringify(blockedMultiCraftNames)}.
+      Dont create the things that are already listed in this list of names: ${JSON.stringify(
+        blockedMultiCraftNames
+      )}.
     `;
 
     try {
@@ -643,39 +642,45 @@ const Camera_Results = () => {
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold">Simple Recycle Suggestions</h1>
-            {isLoadingSimpleSuggestions ? (
-              <div className="flex items-center gap-2">
-                <span className="text-gray-600 text-base">
-                  Generating more ideas...
-                </span>
-                <div className="w-5 h-5 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin" />
-              </div>
-            ) : (
-              <button
-                className="text-2xl text-gray-600 hover:text-black transition"
-                onClick={clearTempAI}
-              >
-                <IoIosRefresh />
-              </button>
-            )}
+            {itemDetails &&
+              (itemDetails.recyclable ? (
+                isLoadingSimpleSuggestions ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-600 text-base">
+                      Generating more ideas...
+                    </span>
+                    <div className="w-5 h-5 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : (
+                  <button
+                    className="text-2xl text-gray-600 hover:text-black transition"
+                    onClick={clearTempAI}
+                  >
+                    <IoIosRefresh />
+                  </button>
+                )
+              ) : null)}
           </div>
-
-          <div className="flex flex-row justify-start gap-4">
+          <div className="flex flex-wrap gap-4">
             {itemDetails ? (
               itemDetails.recyclable ? (
                 craftsArray.length > 0 ? (
                   craftsArray.map((craft, index) => (
                     <div
                       key={index}
-                      craft={craft}
-                      item={craft.title}
-                      image={craft.image}
-                      description={craft.description}
-                      steps={craft.steps}
-                      aiOutput={craft}
-                      saved={false}
-                      materials={itemDetails.name}
-                    />
+                      className="w-full sm:w-1/2 lg:w-1/3 max-w-sm"
+                    >
+                      <CraftBox
+                        craft={craft}
+                        item={craft.title}
+                        image={craft.image || sampleImage}
+                        description={craft.description}
+                        steps={craft.steps}
+                        aiOutput={craft}
+                        saved={false}
+                        materials={itemDetails.name}
+                      />
+                    </div>
                   ))
                 ) : (
                   <h1>Loading recycle suggestions...</h1>
@@ -694,29 +699,45 @@ const Camera_Results = () => {
             <h1 className="text-2xl font-bold">
               Multifaceted Recycle Suggestions
             </h1>
-            <button
-              className="text-2xl text-gray-600 hover:text-black transition"
-              onClick={clearTempAIMulti}
-            >
-              <IoIosRefresh />
-            </button>
+            {itemDetails &&
+              (itemDetails.recyclable ? (
+                isLoadingMultifacet ? (
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-600 text-base">
+                      Generating more ideas...
+                    </span>
+                    <div className="w-5 h-5 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : (
+                  <button
+                    className="text-2xl text-gray-600 hover:text-black transition"
+                    onClick={clearTempAIMulti}
+                  >
+                    <IoIosRefresh />
+                  </button>
+                )
+              ) : null)}
           </div>
           <div className="flex flex-wrap gap-4">
             {itemDetails ? (
               itemDetails.recyclable ? (
-                multiCraftsArray.length > 0 && itemDetails ? (
+                multiCraftsArray.length > 0 ? (
                   multiCraftsArray.map((craft, index) => (
-                    <CraftBox
+                    <div
                       key={index}
-                      craft={craft}
-                      item={craft.title}
-                      image={craft.image}
-                      description={craft.description}
-                      steps={craft.steps}
-                      aiOutput={craft}
-                      saved={false}
-                      materials={itemDetails.name}
-                    />
+                      className="w-full sm:w-1/2 lg:w-1/3 max-w-sm"
+                    >
+                      <CraftBox
+                        craft={craft}
+                        item={craft.title}
+                        image={craft.image || sampleImage}
+                        description={craft.description}
+                        steps={craft.steps}
+                        aiOutput={craft}
+                        saved={false}
+                        materials={itemDetails.name}
+                      />
+                    </div>
                   ))
                 ) : (
                   <h1>Loading...</h1>

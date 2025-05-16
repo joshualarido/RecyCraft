@@ -11,81 +11,6 @@ const Crafts = () => {
   const [loadingSuggestions, setLoadingSuggestions] = useState(true);
   const sampleImage = "https://m.media-amazon.com/images/I/A1usmJwqcOL.jpg";
 
-  //Remove (addSampleCraftToIndexedDB + addSampleCollectionsToIndexedDB) after everything finishes
-  const addSampleCraftToIndexedDB = async () => {
-    try {
-      const db = await initDB();
-      const tx = db.transaction("crafts", "readwrite");
-      const store = tx.objectStore("crafts");
-
-      await store.put({
-        id: 1, // Ensure ID is added if needed for deletion
-        title: "Sample Craft",
-        image: sampleImage,
-        materials: "Plastic bottle, soil, plant",
-        steps: "1. Cut bottle\n2. Add soil\n3. Plant seeds",
-        description: "A bottle reused as a planter",
-        progress: 20,
-      });
-
-      await tx.complete;
-      console.log("Sample craft added successfully");
-    } catch (error) {
-      console.error("Failed to add craft:", error);
-    }
-  };
-
-  const addSampleCollectionsToIndexedDB = async () => {
-    try {
-      const db = await initDB();
-      const tx = db.transaction("collections", "readwrite");
-      const store = tx.objectStore("collections");
-
-      const sampleCollections = [
-        {
-          name: "Bottle Bird Feeder",
-          image: "https://example.com/bottle-bird.jpg",
-          description:
-            "A bird feeder made from a plastic bottle and wooden spoons.",
-          used: false,
-        },
-        {
-          name: "Can Lantern",
-          image: "https://example.com/can-lantern.jpg",
-          description: "A lantern made by punching holes in recycled cans.",
-          used: false,
-        },
-        {
-          name: "Cardboard Organizer",
-          image: "https://example.com/cardboard-organizer.jpg",
-          description: "A desk organizer crafted from old cardboard boxes.",
-          used: false,
-        },
-        {
-          name: "CD Mosaic Art",
-          image: "https://example.com/cd-mosaic.jpg",
-          description: "A mosaic artwork created from broken CD pieces.",
-          used: false,
-        },
-        {
-          name: "Jar Herb Garden",
-          image: "https://example.com/jar-herb.jpg",
-          description: "Mason jars reused for planting kitchen herbs.",
-          used: false,
-        },
-      ];
-
-      for (const item of sampleCollections) {
-        await store.put(item);
-      }
-
-      await tx.complete;
-      console.log("Sample collections added successfully.");
-    } catch (error) {
-      console.error("Failed to add sample collections:", error);
-    }
-  };
-
   //Handle delete button on progressBox
   const handleDeleteCraft = async (id) => {
     try {
@@ -234,10 +159,6 @@ const Crafts = () => {
 
   useEffect(() => {
     const load = async () => {
-      //Remove this 2
-      /* await addSampleCraftToIndexedDB();
-      await addSampleCollectionsToIndexedDB(); */
-
       await loadCraftsFromIndexedDB();
       await loadCollectionsFromIndexedDB();
     };
@@ -254,7 +175,7 @@ const Crafts = () => {
               key={craft.id}
               id={craft.id}
               item={craft.title}
-              image={craft.image}
+              image={craft.image || sampleImage}
               progress={craft.progress}
               onDelete={handleDeleteCraft}
             />
@@ -274,7 +195,7 @@ const Crafts = () => {
             </div>
           )}
         </div>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {suggestedCrafts.map((craft, index) => (
             <CraftBox
               key={index}
