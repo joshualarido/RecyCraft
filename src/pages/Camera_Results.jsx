@@ -23,7 +23,8 @@ const Camera_Results = () => {
 
   useEffect(() => {
     loadImage();
-    loadCraftsFromTempAI(); // Load previous suggestions
+    loadCraftsFromTempAI();
+    loadCraftsFromTempAIMulti();
   }, []);
 
   useEffect(()=>{
@@ -189,7 +190,6 @@ const Camera_Results = () => {
     const db = await initDB();
     const tx = db.transaction("cameraTemp", "readwrite")
     const store = tx.objectStore("cameraTemp")
-
     const request = store.put({ id: 1, name: itemDetails.name, description: itemDetails.description, size: itemDetails.size_estimate, recyclable: itemDetails.recyclable })
     request.onerror=(error)=>console.error("Failed to keep temporary details in camera idb", error)
     request.onsuccess=()=>console.log("temporary details successfully in cameraidb");
@@ -206,7 +206,9 @@ const Camera_Results = () => {
 
       {
         "name": "string",                // The name of the item detected
+
         "description": "string",         // A detailed description of the item, 5-6 sentences, imagine the user isn't able to see the image and you need to describe it to a blind man. ignoring the environment of the item. describe it straightforwardly skipping buzzwords and start with an immediate "A/An...", no saying what is "visible", just say it how it is and describe the image instead of trying to tell someone what you see. Avoid pronoun usage. Include a size estimate in the description as well, match it with the next attribute. (L x W x H, e.g., "30cm x 20cm x 10cm")
+
         "size_estimate": "string",       // Estimate the size in the format L x W x H, e.g., "30cm x 20cm x 10cm"
         "recyclable": true | false       // Use a boolean: true if it can be reused/recycled, false if not. Recyclable is defined by the ability to make something new from the current item being parsed. avoid marking true if the item is organic, looks expensive, or looks like absolute junk that has barely any uses and cannot be made into much stuff.
       }
@@ -484,6 +486,7 @@ const Camera_Results = () => {
 
     const prompt = `
       You are to analyze an array of recyclable materials and return one of several possible recyclable ideas made out of it, including the individual parts of the object you can separate from the main object. You are not needed to use to whole object, but you can use only a part of the object given.
+
       Think creatively and provide new ideas. Avoid repeating suggestions. 
 
       Use only the items in this list:
