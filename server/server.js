@@ -7,11 +7,6 @@ const { textGemini, imgGemini } = require('./vertex');
 const fs = require('fs');
 const path = require('path');
 
-if (process.env.KEY_JSON_BASE64) {
-  const keyBuffer = Buffer.from(process.env.KEY_JSON_BASE64, 'base64');
-  fs.writeFileSync(path.join(__dirname, 'key.json'), keyBuffer);
-}
-
 const app = express();
 const corsOptions = {
   origin: 'https://recycraft-frontend.vercel.app',

@@ -2,8 +2,13 @@ const { VertexAI } = require('@google-cloud/vertexai')
 const { GoogleGenAI, Modality } = require("@google/genai")
 const fs = require('fs');
 
-const keyPath = './key.json'
-process.env.GOOGLE_APPLICATION_CREDENTIALS = keyPath;
+
+if (process.env.KEY_JSON_BASE64) {
+  const keyBuffer = Buffer.from(process.env.KEY_JSON_BASE64, 'base64');
+  const keyPath = path.join(__dirname, 'key.json');
+  fs.writeFileSync(keyPath, keyBuffer);
+  process.env.GOOGLE_APPLICATION_CREDENTIALS = keyPath;
+}
 
 const vertexAI = new VertexAI({
     project: process.env.GOOGLE_PROJECT_ID,
