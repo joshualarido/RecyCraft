@@ -34,7 +34,7 @@ export const initDB = () => {
       }
 
       if (!db.objectStoreNames.contains("crafts")) {
-        const store = db.createObjectStore("crafts", {
+        const store = db.createObjectStore  ("crafts", {
           keyPath: "id",
           autoIncrement: true,
         });
@@ -57,7 +57,6 @@ export const initDB = () => {
         store.createIndex("steps", "steps");
         store.createIndex("description", "description");
         store.createIndex("progress", "progress");
-
       }
 
        if (!db.objectStoreNames.contains("tempAIMulti")) {
@@ -72,6 +71,21 @@ export const initDB = () => {
         store.createIndex("description", "description");
         store.createIndex("progress", "progress");
       }
+
+      if (!db.objectStoreNames.contains("tempAIOther")) {
+        const store = db.createObjectStore("tempAIOther", {
+          keyPath: "id",
+          autoIncrement: true,
+        });
+        store.createIndex("image", "image");
+        store.createIndex("title", "title");
+        store.createIndex("materials", "materials");
+        store.createIndex("steps", "steps");
+        store.createIndex("description", "description");
+        store.createIndex("progress", "progress");
+      }
+
+  
     };
 
    
