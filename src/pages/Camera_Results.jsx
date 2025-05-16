@@ -95,20 +95,19 @@ const Camera_Results = () => {
 
     request.onsuccess = async (e) => {
       const record = e.target.result;
-      if (record && isBase64File(record.image)) {
-        // const objectURL = URL.createObjectURL(record.image);
-        const objectURL = base64ToBlobUrl(record.image,"image/jpeg")
-        setImageBase64(record.image);
-        setImageSrc(objectURL); // for <img>
-
-        // if (record && record.image instanceof Blob) {
-        // const base64 = await blobToBase64(record.image);
-        // const objectURL = URL.createObjectURL(record.image);
-        
-        // setImageBase64(base64);
-
-      } else {
-        console.warn("No image found in store");
+      if (record) {
+        if (typeof record.image === "string" && isBase64File(record.image)) {
+          const objectURL = base64ToBlobUrl(record.image,"image/jpeg")
+          setImageBase64(record.image);
+          setImageSrc(objectURL);
+        } else if (record.image instanceof Blob) {
+          const base64 = await blobToBase64(record.image);
+          const objectURL = URL.createObjectURL(record.image);
+          setImageBase64(base64);
+          setImageSrc(objectURL);
+        } else {
+          console.warn("Unsupported image format in store");
+        }
       }
     };
 
@@ -138,14 +137,14 @@ const Camera_Results = () => {
   }
 
   //  // Converts blob file to base64
-  // const blobToBase64 = (blob) => {
-  //   return new Promise((resolve, reject) => {
-  //     const reader = new FileReader();
-  //     reader.onloadend = () => resolve(reader.result.split(',')[1]); // strip the data:image/... part
-  //     reader.onerror = reject;
-  //     reader.readAsDataURL(blob);
-  //   });
-  // };
+  const blobToBase64 = (blob) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result.split(',')[1]); // strip the data:image/... part
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
 
 
   // Converts base64 to blob
