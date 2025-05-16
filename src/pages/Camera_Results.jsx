@@ -1,8 +1,8 @@
-import CraftBox from '../components/CraftBox';
-import { useState, useEffect } from "react"
-import { initDB } from '../../db/indexedDB';
-import axios from "axios"
-import Crafts from './CraftDetails';
+import CraftBox from "../components/CraftBox";
+import { useState, useEffect } from "react";
+import { initDB } from "../../db/indexedDB";
+import axios from "axios";
+import Crafts from "./CraftDetails";
 import { IoIosRefresh } from "react-icons/io";
 
 const Camera_Results = () => {
@@ -12,43 +12,40 @@ const Camera_Results = () => {
   const [multiCraftsArray, setMultiCraftsArray] = useState([]);
   const [itemDetails, setItemDetails] = useState(null);
   const [suggestionBatchStarted, setSuggestionBatchStarted] = useState(false);
-  const [multiSuggestionBatchStarted, setMultiSuggestionBatchStarted] = useState(false);
+  const [multiSuggestionBatchStarted, setMultiSuggestionBatchStarted] =
+    useState(false);
   const [objectDetected, setObjectDetected] = useState(false);
-  // const [genImageBase64, setGenImageBase64] = useState(null);  // this state isn't used anywhere 
-  const [genImageSrc, setGenImageSrc] = useState(null);        
-
-  
-  
-  
+  const [isLoadingSimpleSuggestions, setIsLoadingSimpleSuggestions] =
+    useState(true); // or false initially
+  // const [genImageBase64, setGenImageBase64] = useState(null);  // this state isn't used anywhere
+  const [genImageSrc, setGenImageSrc] = useState(null);
 
   useEffect(() => {
     loadImage();
     loadCraftsFromTempAI(); // Load previous suggestions
   }, []);
 
-  useEffect(()=>{
-    const hey = async() => {
-      const itemDetailsExists = await checkCamAi()
-      if(itemDetailsExists.length > 0){
+  useEffect(() => {
+    const hey = async () => {
+      const itemDetailsExists = await checkCamAi();
+      if (itemDetailsExists.length > 0) {
         const renderItemDetails = {
           name: itemDetailsExists[0].name,
           description: itemDetailsExists[0].description,
           size_estimate: itemDetailsExists[0].size,
           recyclable: itemDetailsExists[0].recyclable,
-        }
-        setItemDetails(renderItemDetails)
-        setObjectDetected(true)
-      }
-      else if (imageBase64 && !objectDetected) {
+        };
+        setItemDetails(renderItemDetails);
+        setObjectDetected(true);
+      } else if (imageBase64 && !objectDetected) {
         detectObject(imageBase64);
         setObjectDetected(true);
       }
-    }
-    hey()
-  },[imageBase64])
+    };
+    hey();
+  }, [imageBase64]);
 
   useEffect(() => {
-
     if (itemDetails && imageBase64 && !suggestionBatchStarted) {
       if (itemDetails.recyclable) {
         generateInitialSuggestions();
@@ -58,20 +55,18 @@ const Camera_Results = () => {
       setSuggestionBatchStarted(true);
     }
 
-    if(itemDetails && !multiSuggestionBatchStarted){
+    if (itemDetails && !multiSuggestionBatchStarted) {
       if (itemDetails.recyclable) {
         generateInitialMultiSuggestions();
       }
       setMultiSuggestionBatchStarted(true);
     }
-    
-
   }, [itemDetails, imageBase64]);
 
-  const checkCamAi = async() =>{
+  const checkCamAi = async () => {
     const db = await initDB();
-    const tx = db.transaction("cameraTemp", "readonly")
-    const store = tx.objectStore("cameraTemp")
+    const tx = db.transaction("cameraTemp", "readonly");
+    const store = tx.objectStore("cameraTemp");
 
     return new Promise((resolve, reject) => {
       const request = store.getAll();
@@ -84,7 +79,7 @@ const Camera_Results = () => {
         reject("Failed to get all items: " + event.target.error);
       };
     });
-  }
+  };
 
   const loadImage = async () => {
     const db = await initDB();
@@ -97,7 +92,7 @@ const Camera_Results = () => {
       const record = e.target.result;
       if (record) {
         if (typeof record.image === "string" && isBase64File(record.image)) {
-          const objectURL = base64ToBlobUrl(record.image,"image/jpeg")
+          const objectURL = base64ToBlobUrl(record.image, "image/jpeg");
           setImageBase64(record.image);
           setImageSrc(objectURL);
         } else if (record.image instanceof Blob) {
@@ -118,17 +113,23 @@ const Camera_Results = () => {
 
   // Checks if image is base64
   function isBase64File(str) {
-    return typeof str === 'string' && str.startsWith('data:') && str.includes('base64,');
+    return (
+      typeof str === "string" &&
+      str.startsWith("data:") &&
+      str.includes("base64,")
+    );
   }
 
   // Create blob url from base64 for render
-  function base64ToBlobUrl(base64, contentType = '') {
-    const byteCharacters = atob(base64.split(',')[1] || base64);
+  function base64ToBlobUrl(base64, contentType = "") {
+    const byteCharacters = atob(base64.split(",")[1] || base64);
     const byteArrays = [];
 
     for (let i = 0; i < byteCharacters.length; i += 512) {
       const slice = byteCharacters.slice(i, i + 512);
-      const byteNumbers = new Array(slice.length).fill(0).map((_, j) => slice.charCodeAt(j));
+      const byteNumbers = new Array(slice.length)
+        .fill(0)
+        .map((_, j) => slice.charCodeAt(j));
       byteArrays.push(new Uint8Array(byteNumbers));
     }
 
@@ -140,60 +141,74 @@ const Camera_Results = () => {
   const blobToBase64 = (blob) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result.split(',')[1]); // strip the data:image/... part
+      reader.onloadend = () => resolve(reader.result.split(",")[1]); // strip the data:image/... part
       reader.onerror = reject;
       reader.readAsDataURL(blob);
     });
   };
 
-
   // Converts base64 to blob
   const base64ToBlob = (base64Data) => {
-      const mime = 'image/png'
-       const byteCharacters = atob(base64Data);
-  const byteArrays = [];
+    const mime = "image/png";
+    const byteCharacters = atob(base64Data);
+    const byteArrays = [];
 
-  for (let i = 0; i < byteCharacters.length; i += 512) {
-    const slice = byteCharacters.slice(i, i + 512);
-    const byteNumbers = new Array(slice.length);
-    for (let j = 0; j < slice.length; j++) {
-      byteNumbers[j] = slice.charCodeAt(j);
+    for (let i = 0; i < byteCharacters.length; i += 512) {
+      const slice = byteCharacters.slice(i, i + 512);
+      const byteNumbers = new Array(slice.length);
+      for (let j = 0; j < slice.length; j++) {
+        byteNumbers[j] = slice.charCodeAt(j);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      byteArrays.push(byteArray);
     }
-    const byteArray = new Uint8Array(byteNumbers);
-    byteArrays.push(byteArray);
-  }
 
-  return new Blob(byteArrays, { type: mime });
+    return new Blob(byteArrays, { type: mime });
   };
 
-  const saveDetails=async()=>{
-    const db = await initDB()
-    const transaction = db.transaction("collections", "readwrite")
-    const store = transaction.objectStore("collections")
-    const imageBlob = base64ToBlob(imageBase64)
-    
+  const saveDetails = async () => {
+    const db = await initDB();
+    const transaction = db.transaction("collections", "readwrite");
+    const store = transaction.objectStore("collections");
+    const imageBlob = base64ToBlob(imageBase64);
+
     const readAll = await new Promise((resolve, reject) => {
       const readReq = store.getAll();
       readReq.onsuccess = () => resolve(readReq.result);
       readReq.onerror = () => reject(readReq.error);
     });
-    const found = readAll.some(item => item.name === itemDetails.name);
-    if(!found){
-      const request = await store.put({ name: itemDetails.name, image:imageBlob, description: itemDetails.description, used: 0 })
-      request.onerror=(error)=>console.error("Failed to put descriptions in collection idb", error)
-      request.onsuccess=()=>console.log("Descriptions successfully in collections idb");
+    const found = readAll.some((item) => item.name === itemDetails.name);
+    if (!found) {
+      const request = await store.put({
+        name: itemDetails.name,
+        image: imageBlob,
+        description: itemDetails.description,
+        used: 0,
+      });
+      request.onerror = (error) =>
+        console.error("Failed to put descriptions in collection idb", error);
+      request.onsuccess = () =>
+        console.log("Descriptions successfully in collections idb");
     }
-  }
+  };
 
-  const saveCameraAi = async() =>{
+  const saveCameraAi = async () => {
     const db = await initDB();
-    const tx = db.transaction("cameraTemp", "readwrite")
-    const store = tx.objectStore("cameraTemp")
+    const tx = db.transaction("cameraTemp", "readwrite");
+    const store = tx.objectStore("cameraTemp");
 
-    const request = store.put({ id: 1, name: itemDetails.name, description: itemDetails.description, size: itemDetails.size_estimate, recyclable: itemDetails.recyclable })
-    request.onerror=(error)=>console.error("Failed to keep temporary details in camera idb", error)
-    request.onsuccess=()=>console.log("temporary details successfully in cameraidb");
-  }
+    const request = store.put({
+      id: 1,
+      name: itemDetails.name,
+      description: itemDetails.description,
+      size: itemDetails.size_estimate,
+      recyclable: itemDetails.recyclable,
+    });
+    request.onerror = (error) =>
+      console.error("Failed to keep temporary details in camera idb", error);
+    request.onsuccess = () =>
+      console.log("temporary details successfully in cameraidb");
+  };
 
   // --------------------------------------------------------------------------------------------------------------------------------------
   const detectObject = async (image) => {
@@ -213,7 +228,7 @@ const Camera_Results = () => {
 
       Do NOT use triple backticks or any Markdown formatting.
       It must be reiterated that the start of the output should NOT start with \`\`\`JSON or end with \`\`\` either.
-      `
+      `;
     try {
       const res = await axios.post("/gemini/text", { prompt, image });
       const reply = res.data.reply.text;
@@ -223,13 +238,12 @@ const Camera_Results = () => {
       try {
         parsed = JSON.parse(reply);
         setItemDetails(parsed);
-        
+
         console.log("Parsed Gemini object detection:", parsed);
       } catch (jsonError) {
         console.error("Failed to parse Gemini reply as JSON:", jsonError);
         console.log("Raw reply from Gemini:", reply);
       }
-      
     } catch (error) {
       console.error("Error calling Gemini API:", error);
     }
@@ -289,7 +303,7 @@ const Camera_Results = () => {
 
     try {
       const res = await axios.post("/gemini/text", { prompt, image });
-     
+
       const reply = res.data.reply.text;
 
       // // Getting stored itemDetails.name
@@ -302,27 +316,26 @@ const Camera_Results = () => {
       try {
         const parsed = JSON.parse(reply);
         const imageSrc = await generateImage(parsed.name, parsed.description);
-        parsed.image = imageSrc; 
+        parsed.image = imageSrc;
         parsed.progress = 0;
 
         const db = await initDB();
-         const tx = db.transaction("tempAI", "readwrite");
+        const tx = db.transaction("tempAI", "readwrite");
         const store = tx.objectStore("tempAI");
         const request = store.add({
-        title: parsed.name,
-        description: parsed.description,
-        image: parsed.image,
-        steps: parsed.steps,
-        progress: parsed.progress,
-        materials: itemDetails.name,
-      });
+          title: parsed.name,
+          description: parsed.description,
+          image: parsed.image,
+          steps: parsed.steps,
+          progress: parsed.progress,
+          materials: itemDetails.name,
+        });
 
-       request.onsuccess = () => {
-        console.log("Saved generated craft to tempAI");
-        loadCraftsFromTempAI(); 
-      };
+        request.onsuccess = () => {
+          console.log("Saved generated craft to tempAI");
+          loadCraftsFromTempAI();
+        };
 
-        
         console.log("Parsed Gemini suggestion:", genImageSrc);
       } catch (jsonError) {
         console.error("Failed to parse Gemini reply as JSON:", jsonError);
@@ -333,33 +346,44 @@ const Camera_Results = () => {
     }
   };
 
- const generateInitialSuggestions = async () => {
-  const db = await initDB();
-  const tx = db.transaction("tempAI", "readonly");
-  const store = tx.objectStore("tempAI");
-  
-  const getAllRequest = store.getAll();
-  
-  getAllRequest.onsuccess = async () => {
-    const existing = getAllRequest.result;
-    const remaining = 4 - existing.length;
+  const generateInitialSuggestions = async () => {
+    setIsLoadingSimpleSuggestions(true);
+    const db = await initDB();
+    const tx = db.transaction("tempAI", "readonly");
+    const store = tx.objectStore("tempAI");
 
-    if (remaining <= 0) {
-      console.log("Already have 4 suggestions. Skipping generation.");
-      return;
-    }
+    const getAllRequest = store.getAll();
 
-    for (let i = 0; i < remaining; i++) {
-      await createSuggestion(imageBase64);
-    }
+    getAllRequest.onsuccess = async () => {
+      const existing = getAllRequest.result;
+      const remaining = 4 - existing.length;
 
-    await loadCraftsFromTempAI();
+      if (remaining <= 0) {
+        console.log("Already have 4 suggestions. Skipping generation.");
+        await loadCraftsFromTempAI();
+        setIsLoadingSimpleSuggestions(false);
+        return;
+      }
+
+      for (let i = 0; i < remaining; i++) {
+        await createSuggestion(imageBase64);
+      }
+
+      await loadCraftsFromTempAI();
+      setIsLoadingSimpleSuggestions(false);
+
+      getAllRequest.onerror = (e) => {
+        console.error("Failed to count existing suggestions:", e);
+        setIsLoadingSimpleSuggestions(false); 
+      };
+
+      await loadCraftsFromTempAI();
+    };
+
+    getAllRequest.onerror = (e) => {
+      console.error("Failed to count existing suggestions:", e);
+    };
   };
-
-  getAllRequest.onerror = (e) => {
-    console.error("Failed to count existing suggestions:", e);
-  };
-};
 
   const generateImage = async (item, description) => {
     const prompt = `
@@ -382,30 +406,31 @@ const Camera_Results = () => {
     }
   };
 
-
   const base64ToImageSrc = (base64, mimeType = "image/png") => {
     return `data:${mimeType};base64,${base64}`;
   };
 
   // --------------------------------------------------------------------------------------------------------------------------------------
 
-  const generateInitialMultiSuggestions = async() =>{
+  const generateInitialMultiSuggestions = async () => {
     const db = await initDB();
     const tx = db.transaction("tempAIMulti", "readonly");
     const store = tx.objectStore("tempAIMulti");
-    
+
     const getAllRequest = store.getAll();
-    
+
     getAllRequest.onsuccess = async () => {
       const existing = getAllRequest.result;
       let remaining = 4 - existing.length;
       if (remaining === 0) {
-        console.log("Already have 4 multifaceted suggestions. Skipping generation.");
+        console.log(
+          "Already have 4 multifaceted suggestions. Skipping generation."
+        );
         return;
       }
 
       for (let i = 0; i < remaining; i++) {
-        const materials = await gatherMultiMat()
+        const materials = await gatherMultiMat();
         console.log("array of materials used for multifaceted", materials);
         await createMultiSuggestion(materials);
       }
@@ -416,7 +441,7 @@ const Camera_Results = () => {
     getAllRequest.onerror = (e) => {
       console.error("Failed to count existing suggestions:", e);
     };
-  }
+  };
 
   const loadCraftsFromTempAIMulti = async () => {
     const db = await initDB();
@@ -429,10 +454,10 @@ const Camera_Results = () => {
     };
   };
 
-  const gatherMultiMat = async() =>{
+  const gatherMultiMat = async () => {
     const db = await initDB();
-    const tx = db.transaction("collections", "readonly")
-    const store = tx.objectStore("collections")
+    const tx = db.transaction("collections", "readonly");
+    const store = tx.objectStore("collections");
     const index = store.index("used");
     return new Promise((resolve, reject) => {
       const request = index.getAll(IDBKeyRange.only(0));
@@ -449,11 +474,13 @@ const Camera_Results = () => {
         }
 
         // Sort by createdAt or ID to find the latest
-        const sortedByLatest = allItems.sort((a, b) => b.createdAt - a.createdAt); // or `b.id - a.id`
+        const sortedByLatest = allItems.sort(
+          (a, b) => b.createdAt - a.createdAt
+        ); // or `b.id - a.id`
         const latestItem = sortedByLatest[0];
 
         // Remove latestItem from list to avoid duplication
-        const rest = allItems.filter(item => item !== latestItem);
+        const rest = allItems.filter((item) => item !== latestItem);
 
         // Shuffle the rest
         const shuffledRest = rest.sort(() => 0.5 - Math.random());
@@ -462,7 +489,7 @@ const Camera_Results = () => {
         const selected = [latestItem, ...shuffledRest.slice(0, 2)];
 
         // Extract only the desired attribute, e.g., 'name'
-        const namesOnly = selected.map(item => item.name);
+        const namesOnly = selected.map((item) => item.name);
 
         resolve(namesOnly);
       };
@@ -473,10 +500,7 @@ const Camera_Results = () => {
     });
   };
 
-
-
-
-  const createMultiSuggestion = async(nameArray) =>{
+  const createMultiSuggestion = async (nameArray) => {
     const prompt = `
       You are to analyze an array of recyclable materials and return one of several possible recyclable ideas made out of it.
       Think creatively and provide new ideas. Avoid repeating suggestions. 
@@ -509,27 +533,26 @@ const Camera_Results = () => {
       try {
         const parsed = JSON.parse(reply);
         const imageSrc = await generateImage(parsed.name, parsed.description);
-        parsed.image = imageSrc; 
+        parsed.image = imageSrc;
         parsed.progress = 0;
 
         const db = await initDB();
-         const tx = db.transaction("tempAIMulti", "readwrite");
+        const tx = db.transaction("tempAIMulti", "readwrite");
         const store = tx.objectStore("tempAIMulti");
         const request = store.add({
-        title: parsed.name,
-        description: parsed.description,
-        image: parsed.image,
-        steps: parsed.steps,
-        progress: parsed.progress,
-        materials: nameArray,
-      });
+          title: parsed.name,
+          description: parsed.description,
+          image: parsed.image,
+          steps: parsed.steps,
+          progress: parsed.progress,
+          materials: nameArray,
+        });
 
-       request.onsuccess = () => {
-        console.log("Saved generated craft to tempAIMulti");
-        loadCraftsFromTempAIMulti(); 
-      };
+        request.onsuccess = () => {
+          console.log("Saved generated craft to tempAIMulti");
+          loadCraftsFromTempAIMulti();
+        };
 
-        
         console.log("Parsed Gemini suggestion:", genImageSrc);
       } catch (jsonError) {
         console.error("Failed to parse Gemini reply as JSON:", jsonError);
@@ -559,11 +582,9 @@ const Camera_Results = () => {
     };
   };
 
-  
-
   return (
-      <>
-      <div className='flex flex-col gap-6'>
+    <>
+      <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-4">
           <h1 className="text-2xl font-bold">Item Description</h1>
 
@@ -575,32 +596,34 @@ const Camera_Results = () => {
             />
             {itemDetails ? (
               <>
-              <div
-                className={`flex flex-col text-lg ${
-                  itemDetails.recyclable ? 'text-gray-800 bg-white' : 'text-red-800 bg-red-100'
-                } rounded-lg p-4 shadow-md w-3/4 justify-center gap-4 max-sm:w-full`}
-              >
-                <p
-                  className={`text-lg font-medium ${
+                <div
+                  className={`flex flex-col text-lg ${
                     itemDetails.recyclable
-                      ? 'text-emerald-600 bg-emerald-100'
-                      : 'text-red-600 bg-red-200'
-                  } px-3 py-1 rounded-full w-fit`}
+                      ? "text-gray-800 bg-white"
+                      : "text-red-800 bg-red-100"
+                  } rounded-lg p-4 shadow-md w-3/4 justify-center gap-4 max-sm:w-full`}
                 >
-                  {itemDetails.recyclable ? 'Recyclable' : 'Non-Recyclable'}
-                </p>
-                <div className="flex flex-col gap-4">
-                  <p>
-                    <strong>Item</strong>: {itemDetails.name}
+                  <p
+                    className={`text-lg font-medium ${
+                      itemDetails.recyclable
+                        ? "text-emerald-600 bg-emerald-100"
+                        : "text-red-600 bg-red-200"
+                    } px-3 py-1 rounded-full w-fit`}
+                  >
+                    {itemDetails.recyclable ? "Recyclable" : "Non-Recyclable"}
                   </p>
-                  <p>
-                    <strong>Description</strong>: {itemDetails.description}
-                  </p>
-                  <p>
-                    <strong>Size</strong>: {itemDetails.size_estimate}
-                  </p>
+                  <div className="flex flex-col gap-4">
+                    <p>
+                      <strong>Item</strong>: {itemDetails.name}
+                    </p>
+                    <p>
+                      <strong>Description</strong>: {itemDetails.description}
+                    </p>
+                    <p>
+                      <strong>Size</strong>: {itemDetails.size_estimate}
+                    </p>
+                  </div>
                 </div>
-              </div>
               </>
             ) : (
               <h1>Loading...</h1>
@@ -608,11 +631,26 @@ const Camera_Results = () => {
           </div>
         </div>
 
-        <div className='flex flex-col gap-4'>
+        <div className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold">Simple Recycle Suggestions</h1>
-          <button className="text-2xl text-gray-600 hover:text-black transition" onClick={clearTempAI}><IoIosRefresh /></button>
+            <h1 className="text-2xl font-bold">Simple Recycle Suggestions</h1>
+            {isLoadingSimpleSuggestions ? (
+              <div className="flex items-center gap-2">
+                <span className="text-gray-600 text-base">
+                  Generating more ideas...
+                </span>
+                <div className="w-5 h-5 border-4 border-emerald-400 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : (
+              <button
+                className="text-2xl text-gray-600 hover:text-black transition"
+                onClick={clearTempAI}
+              >
+                <IoIosRefresh />
+              </button>
+            )}
           </div>
+
           <div className="flex flex-row justify-start gap-4">
             {itemDetails ? (
               itemDetails.recyclable ? (
@@ -628,7 +666,7 @@ const Camera_Results = () => {
                       aiOutput={craft}
                       saved={false}
                       materials={itemDetails.name}
-                />
+                    />
                   ))
                 ) : (
                   <h1>Loading recycle suggestions...</h1>
@@ -642,31 +680,38 @@ const Camera_Results = () => {
           </div>
         </div>
 
-        <div className='flex flex-col gap-4'>
+        <div className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold">Multifaceted Recycle Suggestions</h1>
-          <button className="text-2xl text-gray-600 hover:text-black transition" onClick={clearTempAIMulti}><IoIosRefresh /></button>
+            <h1 className="text-2xl font-bold">
+              Multifaceted Recycle Suggestions
+            </h1>
+            <button
+              className="text-2xl text-gray-600 hover:text-black transition"
+              onClick={clearTempAIMulti}
+            >
+              <IoIosRefresh />
+            </button>
           </div>
           <div className="flex justify-start gap-4">
             {itemDetails ? (
               itemDetails.recyclable ? (
-                  multiCraftsArray.length > 0 && itemDetails ? (
-                    multiCraftsArray.map((craft, index) => (
-                      <CraftBox
-                        key={index}
-                        craft={craft}
-                        item={craft.title}
-                        image={craft.image}
-                        description={craft.description}
-                        steps={craft.steps}
-                        aiOutput={craft}
-                        saved={false}
-                        materials={itemDetails.name}
-                  />
-                    ))
-                  ) : (
-                    <h1>Loading...</h1>
-                  )
+                multiCraftsArray.length > 0 && itemDetails ? (
+                  multiCraftsArray.map((craft, index) => (
+                    <CraftBox
+                      key={index}
+                      craft={craft}
+                      item={craft.title}
+                      image={craft.image}
+                      description={craft.description}
+                      steps={craft.steps}
+                      aiOutput={craft}
+                      saved={false}
+                      materials={itemDetails.name}
+                    />
+                  ))
+                ) : (
+                  <h1>Loading...</h1>
+                )
               ) : (
                 <h1>Craft is non-recyclable</h1>
               )
@@ -676,8 +721,8 @@ const Camera_Results = () => {
           </div>
         </div>
       </div>
-      </>
+    </>
   );
-}
+};
 
-export default Camera_Results;  
+export default Camera_Results;
