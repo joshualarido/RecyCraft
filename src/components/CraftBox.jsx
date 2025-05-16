@@ -142,7 +142,7 @@ const CraftBox = (props) => {
   };
 
   return (
-    <div className="card w-full max-w-sm bg-base-100 shadow-lg p-4 mx-auto">
+    <div className="card w-full bg-base-100 shadow-lg p-4 mx-auto h-full">
       <div className="rounded-lg overflow-hidden mb-2">
         <img
           src={props.image}
@@ -155,7 +155,7 @@ const CraftBox = (props) => {
         <div className="flex justify-between items-start mb-1 max-sm:flex-col max-sm:gap-2">
           <h2 className="card-title text-lg">{props.item}</h2>
           <h1
-            className="text-lg transition-colors cursor-pointer pt-2 hover:text-emerald-600"
+            className="text-lg transition-colors cursor-pointer pt-2:text-emerald-600"
             onClick={toggleSave}
           >
             {saved ? (

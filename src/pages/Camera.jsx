@@ -273,11 +273,11 @@ const Camera = () => {
                             <h4 className="text-md text-center w-full">Retake Image</h4>
                         </div>
                         <div onClick={handleClickSave} className="flex flex-col justify-center items-center py-4 px-6 gap-2 text-gray-400 cursor-pointer bg-white
-                                        rounded-xl shadow-lg hover:bg-gray-100 transition duration-200 w-full">
+                                        rounded-xl shadow-lg hover:bg-gray-100 transition duration-200 max-sm:w-full">
                             <h1 className="text-3xl"><MdDashboard /></h1>
                             <h4 className="text-md">Save to Collections</h4>
                         </div>
-                        <Link to="/camera_results" className="w-full">          
+                        <Link to="/camera_results" className="max-sm:w-full">          
                             <div className="flex flex-col justify-center items-center py-4 px-6 gap-2 text-gray-400 cursor-pointer
                                             rounded-xl shadow-lg bg-emerald-100 hover:bg-emerald-200 transition duration-200 w-full max-sm:w-full sm:w-auto min-w-[140px]">
                                 <h1 className="text-3xl text-emerald-500"><FaHammer /></h1>

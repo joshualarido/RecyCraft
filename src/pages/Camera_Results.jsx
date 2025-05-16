@@ -662,14 +662,14 @@ const Camera_Results = () => {
                 )
               ) : null)}
           </div>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-row gap-4 max-sm:flex-col">
             {itemDetails ? (
               itemDetails.recyclable ? (
                 craftsArray.length > 0 ? (
                   craftsArray.map((craft, index) => (
                     <div
                       key={index}
-                      className="w-full sm:w-1/2 lg:w-1/3 max-w-sm"
+                      className="w-full sm:w-1/2 lg:w-1/4"
                     >
                       <CraftBox
                         craft={craft}
@@ -719,14 +719,14 @@ const Camera_Results = () => {
                 )
               ) : null)}
           </div>
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-row gap-4 max-sm:flex-col">
             {itemDetails ? (
               itemDetails.recyclable ? (
                 multiCraftsArray.length > 0 ? (
                   multiCraftsArray.map((craft, index) => (
                     <div
                       key={index}
-                      className="w-full sm:w-1/2 lg:w-1/3 max-w-sm"
+                      className="w-full sm:w-1/2 lg:w-1/4"
                     >
                       <CraftBox
                         craft={craft}
