@@ -1,19 +1,23 @@
-const { VertexAI } = require('@google-cloud/vertexai')
-const { GoogleGenAI, Modality } = require("@google/genai")
+const { VertexAI } = require('@google-cloud/vertexai');
 const fs = require('fs');
+const path = require('path');
 
+let credentials = null;
 
 if (process.env.KEY_JSON_BASE64) {
   const keyBuffer = Buffer.from(process.env.KEY_JSON_BASE64, 'base64');
-  const keyPath = path.join(__dirname, 'key.json');
-  fs.writeFileSync(keyPath, keyBuffer);
-  process.env.GOOGLE_APPLICATION_CREDENTIALS = keyPath;
+  credentials = JSON.parse(keyBuffer.toString('utf-8'));
+}
+
+if (!credentials || !process.env.GOOGLE_PROJECT_ID || !process.env.LOCATION) {
+  throw new Error("Missing required environment variables or credentials.");
 }
 
 const vertexAI = new VertexAI({
-    project: process.env.GOOGLE_PROJECT_ID,
-    location: process.env.LOCATION
-})
+  project: process.env.GOOGLE_PROJECT_ID,
+  location: process.env.LOCATION,
+  credentials, // <- this bypasses GOOGLE_APPLICATION_CREDENTIALS
+});
 
 const textModel = vertexAI.getGenerativeModel({
     model: 'gemini-2.5-flash-preview-04-17',
