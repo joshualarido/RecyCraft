@@ -38,7 +38,11 @@ npm install
 npm start
 ```
 
-
+```bash
+cd server
+npm install
+node server.js
+```
 
 ## 🎥 Demo
 
